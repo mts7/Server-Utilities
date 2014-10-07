@@ -2,10 +2,10 @@
 # Server Stats Checker
 
 # Configuration variables
-dir="/home/mts7/"
+dir="/home/user/"
 from="server@$HOSTNAME"
-to="${HOSTNAME}_server@mts7.com"
-fs="/dev/xvda"
+to="${HOSTNAME}_server@example.com"
+fs="/dev/sda1"
 # Alert Levels
 cpuLevel=25
 diskLevel=50
