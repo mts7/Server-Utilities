@@ -19,9 +19,15 @@ Add the file to your cron list.
 Variables
 ====================
 dir: directory to use for temporary files
+
 from: from email address (for sending alerts)
+
 to: to email address (for sending alerts)
+
 fs: file system to check for disk usage
+
 cpuLevel: minimum load average to trigger alert
+
 diskLevel: minimum disk usage to trigger alert
+
 memLevel: minimum memory usage to trigger alert
