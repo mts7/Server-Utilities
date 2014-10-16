@@ -26,7 +26,8 @@ function cpu_check {
     first=$(echo $avg | cut -f1 -d",")
     noProcs=$(grep processor /proc/cpuinfo | wc -l)
     loadPct=$(bc <<< "scale = 2; $first * 100 / $noProcs")
-    if [ "$loadPct" -ge "$cpuLevel" ]; then
+    intPct=$(bc <<< "scale = 0; $first * 100 / $noProcs")
+    if [ "$intPct" -ge "$cpuLevel" ]; then
         message="Load average is at ${loadPct}"
         mail="subject:High Load Average on $HOSTNAME\nfrom:${from}\n${message}\n\n${loadPct}"
         echo -e $mail | /usr/sbin/sendmail "${to}"
@@ -66,6 +67,12 @@ function disk_check {
 }
 
 
+function kernel_check {
+    echo "kernel $(uname -r)"
+    echo $(cat /etc/system-release)
+}
+
+
 function memory_check {
     logFile="${dir}vmstat_results"
     touch $logFile
@@ -97,7 +104,7 @@ function memory_check {
     #pct=$(bc <<< "scale = 2; $used * 100 / $total")
     pct=$(($nonFree * 100 / $total))
 
-    if [ "$nonFree" -ge "$memLevel" ]; then
+    if [ "$pct" -ge "$memLevel" ]; then
         subject="$HOSTNAME Memory Usage"
         message="Memory usage is at $pct%."
         mail="subject:${subject}\nfrom:${from}\n${message}\n\n${usage}"
@@ -114,4 +121,5 @@ function memory_check {
 cpu_check
 disk_check
 memory_check
+kernel_check
 
