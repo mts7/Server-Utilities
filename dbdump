@@ -1,0 +1,61 @@
+#!/bin/bash
+# dbdump by Mike Rodarte
+# Dump a database to a sql file with an interactive database display
+
+echo "===================="
+echo "| Database Back Up |"
+echo "===================="
+
+# Configure these variables
+user="dbuser"
+pass="dbpass"
+file="dblist.txt"
+date=`date +"%Y-%m-%d"`
+# End configuration
+
+# Variables for the file reading loop
+dbs=()
+i=0
+e=0
+
+# Get the database names into a file
+mysqlshow -u $user -p$pass > $file
+lines=`wc -l < $file`
+# Loop through the file of database names
+while read line
+do
+    ((i++))
+    if [ "$i" -lt "6" ]; then
+        continue
+    fi
+    if [ "$i" -eq "$lines" ]; then
+        continue
+    fi
+    # Remove all | symbols (at the beginning and end of the line)
+    name=`echo ${line//|/ }`
+    # Add the database name to the array
+    dbs[$e]=$name
+    ((e++))
+done < $file
+
+# Loop through database names and display to the user
+ai=0
+for db in "${dbs[@]}"; do :
+    echo "$ai: $db"
+    ((ai++))
+done
+
+# Get the number of the database to use
+echo "Type the number of the database you wish to back up and press <Enter>."
+read index
+
+# Dump the selected database into a file
+db=${dbs[$index]}
+sql="${db}_${date}.sql"
+mysqldump -u $user -p$pass $db > $sql
+
+# Remove the file of database names
+rm -f $file
+
+# Display the file name of the database dump
+echo "sql file: $sql"
