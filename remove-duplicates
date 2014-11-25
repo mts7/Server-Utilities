@@ -1,0 +1,5 @@
+#!/bin/bash
+# Remove duplicate packages by Mike Rodarte
+echo "removing $1"
+sudo rpm -e --justdb $1
+shift

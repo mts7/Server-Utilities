@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Change this directory to the one containing the remove-duplicates script.
+dir="/home/user/"
+
+echo "Fix yum update error with duplicates by Mike Rodarte"
+
+# Remove duplicate packages and clean the files
+sudo package-cleanup --dupes | while read -r line; do ${dir}remove-duplicates "$line"; done
+sudo rpm -Va --nofiles --nodigest
+sudo package-cleanup --cleandupes
+sudo rpm --rebuilddb
+sudo yum-complete-transaction --cleanup-only
+sudo yum clean all
+sudo updatedb
