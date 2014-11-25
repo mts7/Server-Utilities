@@ -7,6 +7,10 @@ server-check
 
 dbdump
 
+fix-yum
+
+remove-duplicates
+
 ---
 
 server-check
@@ -58,3 +62,33 @@ Usage
 Edit the configuration variables at the top of the file.
 
 Follow the prompts.
+
+---
+
+fix-yum
+===============
+Use this tool to fix yum updates. This was created to get around the yum error: 
+Couldn't fork, Cannot allocate memory. It requires remove-duplicates to work.
+
+Author: Mike Rodarte
+
+Created: 2014-11-25
+
+Usage
+------------------
+Edit the configuration variable at the top of the file, then run the file.
+
+---
+
+remove-duplicates
+===============
+This is a dependency of fix-yum and is not to be run on its own, though it 
+can be independent of all other scripts.
+
+Author: Mike Rodarte
+
+Created: 2014-11-25
+
+Usage
+------------------
+Pass a package name as an argument to remove that package. 
