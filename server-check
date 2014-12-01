@@ -18,15 +18,10 @@ echo "==========================================================================
 
 function cpu_check {
     str=$(uptime)
-    la="load average: "
-    pos=$(echo $str | grep -bo "$la" | sed 's/:.*$//')
-    lenLa=${#la}
-    lPos=$(($pos + $lenLa + 4))
-    avg=${str:$lPos}
-    first=$(echo $avg | cut -f1 -d",")
+    avg=$(echo $str | sed 's/.*://' | sed 's/, .*//')
     noProcs=$(grep processor /proc/cpuinfo | wc -l)
-    loadPct=$(bc <<< "scale = 2; $first * 100 / $noProcs")
-    intPct=$(bc <<< "scale = 0; $first * 100 / $noProcs")
+    loadPct=$(bc <<< "scale = 2; $avg * 100 / $noProcs")
+    intPct=$(bc <<< "scale = 0; $avg * 100 / $noProcs")
     if [ "$intPct" -ge "$cpuLevel" ]; then
         message="Load average is at ${loadPct}"
         mail="subject:High Load Average on $HOSTNAME\nfrom:${from}\n${message}\n\n${loadPct}"
