@@ -11,6 +11,8 @@ fix-yum
 
 remove-duplicates
 
+monitor.sh
+
 ---
 
 server-check
@@ -92,3 +94,17 @@ Created: 2014-11-25
 Usage
 ------------------
 Pass a package name as an argument to remove that package. 
+
+---
+
+monitor.sh
+===============
+Add this to your cron jobs so it will notify you when a service on a server is down.
+
+Author: Mike Rodarte
+
+Created: 2015-01-15
+
+Usage
+------------------
+Edit the configuration variables at the top of the file, then add the file to crontab.
