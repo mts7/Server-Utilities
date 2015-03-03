@@ -1,0 +1,26 @@
+#!/bin/bash
+file="/home/user/ipaddr"
+ip addr > $file
+iface="eth0"
+i=0
+found=false
+ip=0
+while read line
+do
+    if [[ "$i" -eq "2" ]]; then
+        # http://stackoverflow.com/questions/13373249/extract-substring-using-regexp-in-plain-bash
+        ip=$([[ "$line" =~ ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}) ]] && echo ${BASH_REMATCH[1]})
+    fi
+
+    if echo "$line" | grep -q "$iface"; then
+        found=true
+    fi
+
+    if $found; then
+        i=$(($i + 1))
+    fi
+done < $file
+
+if [[ "$ip" != "0" ]]; then
+    echo $ip
+fi
