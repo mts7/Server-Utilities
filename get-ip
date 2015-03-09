@@ -1,19 +1,25 @@
 #!/bin/bash
+# author: Mike Rodarte
+# accepts single command line argument of all
+# example usage: ./get-ip all
+#                ./get-ip
+
 file="/home/user/ipaddr"
 ip addr > $file
-iface="eth0"
 i=0
 found=false
-ip=0
+ips=()
 while read line
 do
     if [[ "$i" -eq "2" ]]; then
         # http://stackoverflow.com/questions/13373249/extract-substring-using-regexp-in-plain-bash
         ip=$([[ "$line" =~ ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}) ]] && echo ${BASH_REMATCH[1]})
+        ips+=($ip)
     fi
 
-    if echo "$line" | grep -q "$iface"; then
+    if echo "$line" | grep -q "BROADCAST"; then
         found=true
+        i=0
     fi
 
     if $found; then
@@ -21,6 +27,13 @@ do
     fi
 done < $file
 
-if [[ "$ip" != "0" ]]; then
-    echo $ip
+if [[ "$1" = "all" ]]; then
+    for var in "${ips[@]}"
+    do
+        echo "${var}"
+    done
+else
+    echo "${ips[0]}"
 fi
+
+rm -f $file
