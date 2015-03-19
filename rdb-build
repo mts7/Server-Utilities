@@ -1,0 +1,64 @@
+#!/bin/bash
+# author: Mike Rodarte
+#
+# Create a web site that shows the database schema through interactive HTML
+#
+# SchemaSpy: http://sourceforge.net/projects/schemaspy/files/
+# Graphviz: http://graphviz.org/Download..php
+# MySQL jdbc driver: http://dev.mysql.com/downloads/connector/j/
+
+########### BEGIN CONFIGURATION ###########
+# set file paths and database type
+jar="schemaSpy_5.0.0.jar"
+db_type="mysql"
+jdbc="mysql-connector-java-5.1.34-bin.jar"
+
+# set default values
+default_host="localhost"
+default_user="myuser"
+default_pass="mypass"
+default_db="mydb"
+default_web_dir="/var/www/html/"
+############ END CONFIGURATION ############
+
+# validate entries
+if [ ! -e "$jar" ]; then
+    echo "You must download SchemaSpy before you run this program."
+    echo "Download the file from http://sourceforge.net/projects/schemaspy/files/"
+    exit
+fi
+
+# This validation is only necessary if the user wishes to see a graphic representation.
+# Comment the 6 lines below if having a better visual is not required.
+if which dot | grep -q ":"; then
+    echo "You must install dot from Graphviz before continuing."
+    wget http://graphviz.org/graphviz-rhel.repo
+    mv graphviz-rhel.repo /etc/yum.repos.d/
+    yum install -y graphviz*
+fi
+
+# There is a good chance schemaSpy will find the default jdbc driver on the system.
+# Try running this script with the next 5 lines commented and the " -dp $jdbc" part removed.
+if [ ! -e "$jdbc" ]; then
+    echo "We could not find $jdbc at the path specified."
+    echo "You must provide the path to the JDBC driver."
+    exit
+fi
+
+echo "Press <Enter> to select the <default> value."
+echo
+
+# prompt for values
+read -p "db host <$default_host>: " host
+host=${host:-$default_host}
+read -p "db user <$default_user>: " user
+user=${user:-$default_user}
+read -p "db password <$default_pass>: " pass
+pass=${pass:-$default_pass}
+read -p "database <$default_db>: " db
+db=${db:-$default_db}
+read -p "web directory <$default_web_dir>: " web_dir
+web_dir=${web_dir:-$default_web_dir}
+
+# build the HTML diagram for the relational database
+echo "java -jar $jar -t $db_type -o $web_dir$db -host $host -db $db -u $user -p $pass -dp $jdbc"
