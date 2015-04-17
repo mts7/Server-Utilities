@@ -1,0 +1,12 @@
+#!/bin/bash
+# author: Mike Rodarte
+# wrap a program call with timers and display the duration of the program call
+# this accepts the full argument list as the program
+
+program=$@
+st=`date "+%s"`
+$program
+et=`date "+%s"`
+d=`echo $(($et - $st))`
+t=`date -u -d @${d} +"%T"`
+echo "Duration: $t"
