@@ -29,8 +29,10 @@ if [ ! -e "$jar" ]; then
 fi
 
 # This validation is only necessary if the user wishes to see a graphic representation.
-# Comment the 6 lines below if having a better visual is not required.
-if which dot | grep -q ":"; then
+# Comment the 8 lines below if having a better visual is not required.
+/usr/bin/which dot > /dev/null
+rc=$?
+if [ $rc -eq 1 ]; then
     echo "You must install dot from Graphviz before continuing."
     wget http://graphviz.org/graphviz-rhel.repo
     mv graphviz-rhel.repo /etc/yum.repos.d/
