@@ -1,0 +1,14 @@
+#!/bin/bash
+# author Mike Rodarte
+
+# make backup file of localtime
+sudo mv /etc/localtime /etc/localtime.bak
+
+# display the current date
+date
+
+# TODO: consider prompting and validation user input
+sudo ln -s /usr/share/zoneinfo/America/Denver /etc/localtime
+
+date
+
