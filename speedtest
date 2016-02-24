@@ -1,0 +1,33 @@
+#!/bin/bash
+# author: Mike Rodarte
+
+outfile='test-results'
+rm -rf $outfile
+touch $outfile
+
+servers=(dal01 lon02 sjc01 sea01 wdc01 ams01 mel01)
+#servers=(dal01)
+file='test100.zip'
+
+for i in ${servers[@]}; do
+    url="http://speedtest.${i}.softlayer.com/downloads/${file}"
+    echo $i >> $outfile
+    # TODO: use tee to display and write contents
+    wget $url |& tail -n 2 >> $outfile
+    rm -rf $file 
+done
+
+# go through $outfile line by line to determine server and speed, then display summary
+disp=''
+while read d t s u h f r z; do
+    if [[ "$h" == "-" ]]; then
+        speed="${s} ${u}"
+        length=${#speed}
+        last=$(expr $length - 2)
+        disp="${disp} ${speed:1:${last}}"
+        echo $disp
+    else
+        disp=$d
+    fi
+done < $outfile
+
