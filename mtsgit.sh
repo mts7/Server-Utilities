@@ -10,7 +10,7 @@ prompt="MTSgit> "
 default_branch=''
 default_truth='master'
 current_branch=''
-version='1.08'
+version='1.09'
 
 function display_prompt {
   set_current
@@ -277,7 +277,7 @@ function script_variables {
 }
 
 function set_current {
-  current_branch=$(git name-rev --name-only HEAD)
+  current_branch=$(git rev-parse --abbrev-ref HEAD)
 }
 
 function quit {
