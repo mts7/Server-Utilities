@@ -10,7 +10,7 @@ prompt="MTSgit> "
 default_branch=''
 default_truth='master'
 current_branch=''
-version='1.06'
+version='1.07'
 
 function display_prompt {
   set_current
@@ -32,6 +32,7 @@ function display_prompt {
     merge) git_merge;;
     push) git_push;;
     remote) git_remote;;
+    reset) git_reset;;
     restore) git_restore;;
     save) git_save;;
     switch) git_switch;;
@@ -57,6 +58,7 @@ function show_commands {
   echo 'merge               Merge two branches'
   echo 'push                Push the current branch to origin'
   echo 'remote              Make a local branch remote'
+  echo 'reset               Discard all changes and reset index and working tree'
   echo 'restore             Restore the latest stash'
   echo 'save                Stash the current changes'
   echo 'switch              Switch to a branch'
@@ -198,6 +200,14 @@ function git_remote {
   display_prompt
 }
 
+function git_reset {
+  cd $gitDir
+
+  git reset --hard
+
+  display_prompt
+}
+
 function git_restore {
   cd $gitDir
 
@@ -261,7 +271,7 @@ function set_current {
 }
 
 function quit {
-  echo 'Thank you for using MTS git'
+  echo 'Thank you for using MTSgit'
   exit 0
 }
 
