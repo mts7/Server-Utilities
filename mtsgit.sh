@@ -10,7 +10,7 @@ prompt="MTSgit> "
 default_branch=''
 default_truth='master'
 current_branch=''
-version='1.07'
+version='1.08'
 
 function display_prompt {
   set_current
@@ -36,6 +36,7 @@ function display_prompt {
     restore) git_restore;;
     save) git_save;;
     switch) git_switch;;
+    undo) git_undo;;
     *) show_commands;;
   esac
 }
@@ -62,6 +63,7 @@ function show_commands {
   echo 'restore             Restore the latest stash'
   echo 'save                Stash the current changes'
   echo 'switch              Switch to a branch'
+  echo 'undo                Undo a commit'
 
   display_prompt
 }
@@ -232,6 +234,14 @@ function git_switch {
 
   git checkout $branch
   git pull
+
+  display_prompt
+}
+
+function git_undo {
+  cd $gitDir
+
+  git reset --soft HEAD
 
   display_prompt
 }
