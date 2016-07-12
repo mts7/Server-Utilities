@@ -23,7 +23,7 @@ function display_prompt {
     truth) script_truth;;
     v) script_variables;;
     q) quit;;
-    add) git_add;
+    add) git_add;;
     changes) git_changes;;
     commit) git_commit;;
     create) git_create;;
