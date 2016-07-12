@@ -10,7 +10,7 @@ prompt="MTSgit> "
 default_branch=''
 default_truth='master'
 current_branch=''
-version='1.11'
+version='1.12'
 
 function display_prompt {
   set_current
@@ -104,7 +104,7 @@ function git_commit {
 
   read -p "message: " message
 
-  git commit -m $message
+  git commit -a -m "$message"
 
   display_prompt
 }
