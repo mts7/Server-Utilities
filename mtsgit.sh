@@ -10,7 +10,7 @@ prompt="MTSgit> "
 default_branch=''
 default_truth='master'
 current_branch=''
-version='1.10'
+version='1.11'
 
 function display_prompt {
   set_current
@@ -61,7 +61,7 @@ function show_commands {
   echo 'current             Display the current branch'
   echo 'delete              Delete a branch'
   echo 'list                List all local branches'
-  echo 'log                 Display the Commit History'
+  echo 'log                 Display the Commit History for the past week'
   echo 'merge               Merge two branches'
   echo 'pull                Fetch or merge changes with remote server'
   echo 'push                Push the current branch to origin'
@@ -172,9 +172,11 @@ function git_log {
   branch=${branch:-$default_branch}
   read -p "author (blank for all): " author
 
+  week_ago=$(date --date="7 days ago" +"%Y"-"%m"-"%d")
+
   git checkout $branch
   git pull
-  git log --stat --graph --author=${author}
+  git log --stat --graph --author=${author} --since="$week_ago"
 
   display_prompt
 }
