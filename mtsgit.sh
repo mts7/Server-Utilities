@@ -10,7 +10,7 @@ prompt="MTSgit> "
 default_branch=''
 default_truth='master'
 current_branch=''
-version='1.09'
+version='1.10'
 
 function display_prompt {
   set_current
@@ -23,18 +23,22 @@ function display_prompt {
     truth) script_truth;;
     v) script_variables;;
     q) quit;;
+    add) git_add;
     changes) git_changes;;
+    commit) git_commit;;
     create) git_create;;
     current) git_current;;
     delete) git_delete;;
     list) git_list;;
     log) git_log;;
     merge) git_merge;;
+    pull) git_pull;;
     push) git_push;;
     remote) git_remote;;
     reset) git_reset;;
     restore) git_restore;;
     save) git_save;;
+    status) git_status;;
     switch) git_switch;;
     undo) git_undo;;
     *) show_commands;;
@@ -50,20 +54,34 @@ function show_commands {
   echo 'v                   Show current variables'
   echo 'q                   Quit the program'
   echo
+  echo 'add                 Add one or more files to staging'
   echo 'changes             Show the files changed between two branches'
+  echo 'commit              Commit changes to local branch or repository'
   echo 'create              Create a new branch'
   echo 'current             Display the current branch'
   echo 'delete              Delete a branch'
   echo 'list                List all local branches'
   echo 'log                 Display the Commit History'
   echo 'merge               Merge two branches'
+  echo 'pull                Fetch or merge changes with remote server'
   echo 'push                Push the current branch to origin'
   echo 'remote              Make a local branch remote'
   echo 'reset               Discard all changes and reset index and working tree'
   echo 'restore             Restore the latest stash'
   echo 'save                Stash the current changes'
+  echo 'status              List the files changed and need to be added'
   echo 'switch              Switch to a branch'
   echo 'undo                Undo a commit'
+
+  display_prompt
+}
+
+function git_add {
+  cd $gitDir
+
+  read -p 'file name: ' files
+
+  git add $files
 
   display_prompt
 }
@@ -77,6 +95,16 @@ function git_changes {
   truth=${truth:-$default_truth}
 
   git diff --name-only $changed $truth
+
+  display_prompt
+}
+
+function git_commit {
+  cd $gitDir
+
+  read -p "message: " message
+
+  git commit -m $message
 
   display_prompt
 }
@@ -175,6 +203,14 @@ function git_merge {
   display_prompt
 }
 
+function git_pull {
+  cd $gitDir
+
+  git pull
+
+  display_prompt
+}
+
 function git_push {
   cd $gitDir
 
@@ -222,6 +258,14 @@ function git_save {
   cd $gitDir
 
   git stash save
+
+  display_prompt
+}
+
+function git_status {
+  cd $gitDir
+
+  git status
 
   display_prompt
 }
