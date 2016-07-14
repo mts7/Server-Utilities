@@ -10,7 +10,7 @@ prompt="MTSgit> "
 default_branch=''
 default_truth='master'
 current_branch=''
-version='1.12'
+version='1.13'
 
 function display_prompt {
   set_current
@@ -60,7 +60,7 @@ function show_commands {
   echo 'create              Create a new branch'
   echo 'current             Display the current branch'
   echo 'delete              Delete a branch'
-  echo 'list                List all local branches'
+  echo 'list                List branches'
   echo 'log                 Display the Commit History for the past week'
   echo 'merge               Merge two branches'
   echo 'pull                Fetch or merge changes with remote server'
@@ -153,9 +153,15 @@ function git_delete {
 function git_list {
   cd $gitDir
 
+  read -p 'remote [y/n]: ' remote
   read -p "filter: " filter
 
   command='git branch'
+
+  if [ "$remote" = "y" ]; then
+    command="$command -r"
+  fi
+
   if [ ! -z $filter ]; then
     command="$command | grep $filter"
   fi
