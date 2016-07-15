@@ -10,7 +10,7 @@ prompt="MTSgit> "
 default_branch=''
 default_truth='master'
 current_branch=''
-version='1.13'
+version='1.14'
 
 function display_prompt {
   set_current
@@ -41,7 +41,7 @@ function display_prompt {
     status) git_status;;
     switch) git_switch;;
     undo) git_undo;;
-    *) show_commands;;
+    *) echo -e "\e[91mUnknown command $choice\e[0m";show_commands;;
   esac
 }
 
@@ -81,7 +81,27 @@ function git_add {
 
   read -p 'file name: ' files
 
-  git add $files
+  i="0"
+  while [ -z $files ]
+  do
+    if [ $i -eq 3 ]; then
+      break
+    fi
+    i=$[$i+1]
+    read -p $'\e[91mPlease specify a file name: \e[0m' files
+  done
+
+  # TODO: show result of "git status" to help indicate what should be added
+
+  if [ -z $files ]; then
+    echo -e "\e[91mA file name was not specified"
+  else
+    git add $files
+  
+    if [ $? -gt 0 ]; then
+      echo -e "\e[91mError with add"
+    fi
+  fi
 
   display_prompt
 }
@@ -95,6 +115,9 @@ function git_changes {
   truth=${truth:-$default_truth}
 
   git diff --name-only $changed $truth
+  if [ $? -gt 0 ]; then
+    echo -e "\e[91mError with diff"
+  fi
 
   display_prompt
 }
@@ -104,7 +127,24 @@ function git_commit {
 
   read -p "message: " message
 
-  git commit -a -m "$message"
+  i="0"
+  while [ -z $message ]
+  do
+    if [ $i -eq 3 ]; then
+      break
+    fi
+    i=$[$i+1]
+    read -p $'\e[91mPlease specify a commit message: \e[0m' message
+  done
+
+  if [ -z $message ]; then
+    echo -e "\e[91mPlease commit with a message"
+  else
+    git commit -a -m "$message"
+    if [ $? -gt 0 ]; then
+      echo -e "\e[91mError with commit"
+    fi
+  fi
 
   display_prompt
 }
@@ -113,16 +153,23 @@ function git_create {
   cd $gitDir
 
   read -p "new branch name [${default_branch}]: " branch
-
   branch=${branch:-$default_branch}
 
   git checkout $default_truth
-  git pull --no-rebase -v "origin"
-  if [ $? -eq 1 ]; then
-    echo 'Aborting branch create.'
+  if [ $? -gt 0 ]; then
+    echo -e "\e[91mError with checking out $default_truth"
   else
-    git checkout -b $branch
-    echo "Created $branch"
+    git pull --no-rebase -v "origin"
+    if [ $? -eq 1 ]; then
+      echo -e "\e[91mAborting branch create."
+    else
+      git checkout -b $branch
+      if [ $? -eq 1 ]; then
+        echo -e "\e[91mFailed to create branch"
+      else
+        echo -e "\e[92mCreated $branch"
+      fi
+    fi
   fi
 
   display_prompt
@@ -132,7 +179,7 @@ function git_current {
   cd $gitDir
 
   set_current
-  echo $current_branch
+  echo -e "\e[36m$current_branch"
 
   display_prompt
 }
@@ -145,7 +192,30 @@ function git_delete {
   read -p "branch name [${default_branch}]: " branch
   branch=${branch:-$default_branch}
 
-  git branch -D $branch
+  to_delete=1
+  if [ "$branch" = $default_truth ]; then
+    echo -e "\e[101mDeleting the default truth branch is not recommended."
+    read -p "Are you sure you want to delete the source of truth? [y/n]: " answer
+    if [ "$answer" = "y" ]; then
+      to_delete=1
+    elif [ "$answer" = "n" ]; then
+      to_delete=0
+    else
+      to_delete=0
+      echo -e "\e[91mUnknown answer $answer"
+    fi
+  fi
+
+  if [ $to_delete -eq 1 ]; then
+    git branch -D $branch
+    if [ $? -gt 0 ]; then
+      echo -e "\e[91mCould not delete branch $branch"
+    else
+      echo -e "\e[92mDeleted $branch"
+    fi
+  else
+    echo -e "\e[93mSkipping deletion of $branch"
+  fi
 
   display_prompt
 }
@@ -154,19 +224,25 @@ function git_list {
   cd $gitDir
 
   read -p 'remote [y/n]: ' remote
-  read -p "filter: " filter
 
   command='git branch'
 
   if [ "$remote" = "y" ]; then
     command="$command -r"
+  elif [ "$remote" != "n" ]; then
+    echo -e "\e[91mInvalid response\e[0m"
   fi
 
+  read -p "filter: " filter
   if [ ! -z $filter ]; then
     command="$command | grep $filter"
   fi
 
   eval ${command}
+
+  if [ $? -gt 0 ]; then
+    echo -e "\e[91mCould not list branches"
+  fi
 
   display_prompt
 }
@@ -181,8 +257,19 @@ function git_log {
   week_ago=$(date --date="7 days ago" +"%Y"-"%m"-"%d")
 
   git checkout $branch
-  git pull
-  git log --stat --graph --author=${author} --since="$week_ago"
+  if [ $? -qt 0 ]; then
+    echo -e "\e[91mCould not checkout $branch"
+  else
+    git pull
+    if [ $? -qt 0 ]; then
+      echo -e "\e[91mCould not pull"
+    else
+      git log --stat --graph --author=${author} --since="$week_ago"
+      if [ $? -gt 0 ]; then
+        echo -e "\e[91mCould not get log"
+      fi
+    fi
+  fi
 
   display_prompt
 }
@@ -195,16 +282,39 @@ function git_merge {
 
   read -p "server branch name: " branchServer
 
-  git checkout $branchServer
-  git merge $branchCode
-  if [ $? -gt 0 ]; then
-    echo 'Aborting branch merge'
+  i="0"
+  while [ -z $branchServer ]
+  do
+    if [ $i -eq 3 ]; then
+      break
+    fi
+    i=$[$i+1]
+    read -p $'\e[91mPlease specify a server branch name: \e[0m' branchServer
+  done
+
+  # TODO: show results of "git list -r | grep <current sprint>" to suggest a branch name
+
+  if [ -z $branchServer ]; then
+    echo -e "\e[91mA server branch name must be specified"
   else
-    git pull --no-rebase -v "origin"
+    git checkout $branchServer
     if [ $? -gt 0 ]; then
-      echo 'Aborting pull after merge'
+      echo -e "\e[91mCould not switch to $branchServer"
     else
-      git push "origin" $branchServer:$branchServer
+      git merge $branchCode
+      if [ $? -gt 0 ]; then
+        echo -e "\e[91mAborting branch merge"
+      else
+        git pull --no-rebase -v "origin"
+        if [ $? -gt 0 ]; then
+          echo -e "\e[91mAborting pull after merge"
+        else
+          git push "origin" $branchServer:$branchServer
+          if [ $? -gt 0 ]; then
+            echo -e "\e[91mCould not push code with $branchServer"
+          fi
+        fi
+      fi
     fi
   fi
 
@@ -216,6 +326,10 @@ function git_pull {
 
   git pull
 
+  if [ $? -gt 0 ]; then
+    echo -e "\e[91mError with pull"
+  fi
+
   display_prompt
 }
 
@@ -224,11 +338,11 @@ function git_push {
 
   git pull
   if [ $? -eq 1 ]; then
-    echo 'Aborting pull'
+    echo -e "\e[91mAborting pull"
   else
     git push
     if [ $? -eq 1 ]; then
-      echo 'Aborting push after pull'
+      echo -e "\e[91mAborting push after pull"
     fi
   fi
 
@@ -243,6 +357,10 @@ function git_remote {
 
   git push -u $branch
 
+  if [ $? -gt 0 ]; then
+    echo -e "\e[91mError making branch $branch remote"
+  fi
+
   display_prompt
 }
 
@@ -250,6 +368,12 @@ function git_reset {
   cd $gitDir
 
   git reset --hard
+
+  if [ $? -gt 0 ]; then
+    echo -e "\e[91mError with reset"
+  else
+    echo -e "\e[92mReset the branch"
+  fi
 
   display_prompt
 }
@@ -259,6 +383,10 @@ function git_restore {
 
   git stash pop
 
+  if [ $? -gt 0 ]; then
+    echo -e "\e[91mError popping from the stash"
+  fi
+
   display_prompt
 }
 
@@ -266,6 +394,10 @@ function git_save {
   cd $gitDir
 
   git stash save
+
+  if [ $? -gt 0 ]; then
+    echo -e "\e[91mError saving to the stash"
+  fi
 
   display_prompt
 }
@@ -285,7 +417,15 @@ function git_switch {
   branch=${branch:-$default_branch}
 
   git checkout $branch
-  git pull
+
+  if [ $? -gt 0 ]; then
+    echo -e "\e[91mError checking out $branch"
+  else
+    git pull
+    if [ $? -gt 0 ]; then
+      echo -e "\e[91mError with pull"
+    fi
+  fi
 
   display_prompt
 }
@@ -295,6 +435,12 @@ function git_undo {
 
   git reset --soft HEAD
 
+  if [ $? -gt 0 ]; then
+    echo -e "\e[91mError with reset"
+  else
+    echo -e "\e[92mRemoved the commit"
+  fi
+
   display_prompt
 }
 
@@ -302,28 +448,45 @@ function script_set {
   read -p "default branch [${current_branch}]: " default_branch
   default_branch=${default_branch:-$current_branch}
 
-  echo "Set default branch to ${default_branch}"
+  echo -e "\e[92mSet default branch to \e[32m${default_branch}"
 
   display_prompt
 }
 
 function script_truth {
-  read -p "default source of truth branch: " default_truth
+  read -p "default source of truth branch: " truth
 
-  echo "Set default source of truth to ${default_truth}"
+  i="0"
+  while [ -z $truth ]
+  do
+    if [ $i -eq 3 ]; then
+      break
+    fi
+    i=$[$i+1]
+    read -p $'\e[91mPlease specify the source of truth: \e[0m' truth
+  done
+
+  if [ -z $truth ]; then
+    echo -e "\e[91mNo branch specified"
+  else
+    # TODO: check to see if the $truth branch actually exists before setting default
+
+    default_truth="$truth"
+    echo -e "\e[92mSet default source of truth to \e[96m${default_truth}"
+  fi
 
   display_prompt
 }
 
 function script_variables {
-  echo 'Current Variables'
+  echo -e "\e[0mCurrent Variables"
   echo
-  echo "gitDir: $gitDir"
-  echo "prompt: $prompt"
-  echo "default_branch: $default_branch"
-  echo "default_truth: $default_truth"
-  echo "current_branch: $current_branch"
-  echo "version: $version"
+  echo -e "gitDir: \e[33m$gitDir\e[0m"
+  echo -e "prompt: \e[95m$prompt\e[0m"
+  echo -e "default_branch: \e[32m$default_branch\e[0m"
+  echo -e "default_truth: \e[96m$default_truth\e[0m"
+  echo -e "current_branch: \e[36m$current_branch\e[0m"
+  echo -e "version: \e[94m$version\e[0m"
 
   display_prompt
 }
@@ -338,7 +501,7 @@ function quit {
 }
 
 echo 'MTSgit: An interactive script for standard git commands'
-echo "Version ${version}"
+echo -e "Version \e[94m${version}\e[0m"
 echo '                    by Mike Rodarte'
 echo
 echo 'Type help for a list of available commands.'
