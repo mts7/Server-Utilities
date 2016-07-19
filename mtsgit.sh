@@ -11,7 +11,7 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.15'
+version='1.16'
 
 function display_prompt {
   set_current
@@ -270,12 +270,12 @@ function git_log {
 
   git checkout $branch
   rc=$?
-  if [ $rc -qt 0 ]; then
+  if [ $rc -gt 0 ]; then
     echo -e "\e[91mError [$rc]; could not checkout $branch"
   else
     git pull
     rc=$?
-    if [ $rc -qt 0 ]; then
+    if [ $rc -gt 0 ]; then
       echo -e "\e[91mError [$rc]; could not pull"
     else
       git log --stat --graph --author=${author} --since="$week_ago"
@@ -477,16 +477,26 @@ function git_undo {
   display_prompt
 }
 
+function script_prefix {
+  temp_array=(${default_branch//-/ })
+  prefix="${temp_array[0]}"
+}
+
 function script_set {
   read -p "default branch [${current_branch}]: " default_branch
   default_branch=${default_branch:-$current_branch}
 
   echo -e "\e[92mSet default branch to \e[32m${default_branch}"
 
-  temp_array=(${default_branch//-/ })
-  prefix="${temp_array[0]}"
+  script_prefix
 
   display_prompt
+}
+
+function script_set_current {
+  set_current
+  default_branch="$current_branch"
+  script_prefix
 }
 
 function script_truth {
@@ -551,5 +561,6 @@ echo 'Type help for a list of available commands.'
 echo 'Press <Enter> to execute the command.'
 echo
 
+script_set_current
 display_prompt
 
