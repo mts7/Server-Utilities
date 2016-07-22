@@ -11,7 +11,7 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.16'
+version='1.18'
 
 function display_prompt {
   set_current
@@ -91,7 +91,7 @@ function git_add {
     i=$[$i+1]
     # show result of "git status" to help indicate what should be added
     if [ $i -eq 1 ]; then
-      git status
+      git status -s
     fi
     read -p $'\e[91mPlease specify a file name: \e[0m' files
   done
@@ -221,8 +221,6 @@ function git_delete {
     rc=$?
     if [ $rc -gt 0 ]; then
       echo -e "\e[91mError [$rc]; could not delete branch $branch"
-    else
-      echo -e "\e[92mDeleted $branch"
     fi
   else
     echo -e "\e[93mSkipping deletion of $branch"
@@ -266,23 +264,25 @@ function git_log {
   branch=${branch:-$default_branch}
   read -p "author (blank for all): " author
 
-  week_ago=$(date --date="7 days ago" +"%Y"-"%m"-"%d")
+  default_days=7
+  read -p "days ago [${default_days}]: " days
+  if [ "$days" -eq "$days" ] > /dev/null 2>&1
+  then
+    days=$days
+  else
+    days=$default_days
+  fi
+  days_ago=$(date --date="$days days ago" +"%Y"-"%m"-"%d")
 
   git checkout $branch
   rc=$?
   if [ $rc -gt 0 ]; then
     echo -e "\e[91mError [$rc]; could not checkout $branch"
   else
-    git pull
+    git log --stat --graph --author=${author} --since="$days_ago"
     rc=$?
     if [ $rc -gt 0 ]; then
-      echo -e "\e[91mError [$rc]; could not pull"
-    else
-      git log --stat --graph --author=${author} --since="$week_ago"
-      rc=$?
-      if [ $rc -gt 0 ]; then
-        echo -e "\e[91mError [$rc]; could not get log"
-      fi
+      echo -e "\e[91mError [$rc]; could not get log"
     fi
   fi
 
@@ -435,7 +435,7 @@ function git_save {
 function git_status {
   cd $gitDir
 
-  git status
+  git status -s
 
   display_prompt
 }
