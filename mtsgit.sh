@@ -11,7 +11,7 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.19'
+version='1.19.1'
 
 function display_prompt {
   set_current
@@ -101,7 +101,7 @@ function git_add {
   else
     git add $files
     rc=$?
-  
+
     if [ $rc -gt 0 ]; then
       echo -e "\e[91mError [$rc] with add"
     fi
@@ -246,7 +246,7 @@ function git_list {
     echo
     git checkout $default_truth
     rc=$?
-  
+
     if [ $rc -gt 0 ]; then
       echo -e "\e[91mError [$rc] checking out $branch"
     else
@@ -574,6 +574,8 @@ function quit {
   echo 'Thank you for using MTSgit'
   exit 0
 }
+
+cd $gitDir
 
 echo 'MTSgit: An interactive script for standard git commands'
 echo -e "Version \e[94m${version}\e[0m"
