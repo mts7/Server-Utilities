@@ -11,7 +11,7 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.18'
+version='1.19'
 
 function display_prompt {
   set_current
@@ -236,13 +236,35 @@ function git_list {
 
   command='git branch'
 
+  read -p "filter: " filter
+
   if [ "$remote" = "y" ]; then
     command="$command -r"
+
+    # check for new branches that were pushed since the last pull
+    echo -e "\e[36mChecking for remote branches...\e[0m"
+    echo
+    git checkout $default_truth
+    rc=$?
+  
+    if [ $rc -gt 0 ]; then
+      echo -e "\e[91mError [$rc] checking out $branch"
+    else
+      git pull
+      rc=$?
+      if [ $rc -gt 0 ]; then
+        echo -e "\e[91mError [$rc] with pull"
+      fi
+    fi
+    echo
+    echo -e "\e[33mRemote Branches\e[0m"
   elif [ "$remote" != "n" ]; then
     echo -e "\e[91mInvalid response\e[0m"
+  else
+    echo
+    echo -e "\e[33mLocal Branches\e[0m"
   fi
 
-  read -p "filter: " filter
   if [ ! -z $filter ]; then
     command="$command | grep $filter"
   fi
