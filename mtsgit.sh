@@ -11,7 +11,7 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.19.1'
+version='1.20'
 
 function display_prompt {
   set_current
@@ -33,6 +33,7 @@ function display_prompt {
     list) git_list;;
     log) git_log;;
     merge) git_merge;;
+    message) git_message;;
     pull) git_pull;;
     push) git_push;;
     remote) git_remote;;
@@ -347,11 +348,13 @@ function git_merge {
       rc=$?
       if [ $rc -gt 0 ]; then
         echo -e "\e[91mError [$rc]; aborting branch merge"
+	echo -e "\e[93mPlease fix the conflicts and then push"
       else
         git pull --no-rebase -v "origin"
         rc=$?
         if [ $rc -gt 0 ]; then
           echo -e "\e[91mError [$rc]; aborting pull after merge"
+	  echo -e "\e[93mPlease fix the issue and then push"
         else
           git push "origin" $branchServer:$branchServer
           rc=$?
@@ -360,6 +363,23 @@ function git_merge {
           fi
         fi
       fi
+    fi
+  fi
+
+  display_prompt
+}
+
+function git_message {
+  cd $gitDir
+
+  read -p 'new commit message: ' message
+
+  if [ -n "$message" ]; then
+    git commit --amend -m "$message"
+
+    rc=$?
+    if [ $rc -gt 0 ]; then
+      echo -e "\e[91mError amending the commit message\e[0m"
     fi
   fi
 
