@@ -11,7 +11,7 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.20'
+version='1.22'
 
 function display_prompt {
   set_current
@@ -39,6 +39,7 @@ function display_prompt {
     remote) git_remote;;
     reset) git_reset;;
     restore) git_restore;;
+    revert) git_revert;;
     save) git_save;;
     status) git_status;;
     switch) git_switch;;
@@ -65,11 +66,13 @@ function show_commands {
   echo 'list                List branches'
   echo 'log                 Display the Commit History for the past week'
   echo 'merge               Merge two branches'
+  echo 'message             Update a message to the last commit'
   echo 'pull                Fetch or merge changes with remote server'
   echo 'push                Push the current branch to origin'
   echo 'remote              Make a local branch remote'
   echo 'reset               Discard all changes and reset index and working tree'
   echo 'restore             Restore the latest stash'
+  echo 'revert              Revert a commit'
   echo 'save                Stash the current changes'
   echo 'status              List the files changed and need to be added'
   echo 'switch              Switch to a branch'
@@ -286,6 +289,7 @@ function git_log {
   read -p "branch name [${default_branch}]: " branch
   branch=${branch:-$default_branch}
   read -p "author (blank for all): " author
+  read -p "file relative to bio-techne.com (blank for all): " file
 
   default_days=7
   read -p "days ago [${default_days}]: " days
@@ -302,7 +306,11 @@ function git_log {
   if [ $rc -gt 0 ]; then
     echo -e "\e[91mError [$rc]; could not checkout $branch"
   else
-    git log --stat --graph --author=${author} --since="$days_ago"
+    file_cmd=''
+    if [ -n "$file" ]; then
+      file_cmd=" --follow -p $file"
+    fi
+    git log --stat --graph --author=${author} --since="$days_ago" $file_cmd
     rc=$?
     if [ $rc -gt 0 ]; then
       echo -e "\e[91mError [$rc]; could not get log"
@@ -456,6 +464,25 @@ function git_restore {
 
   if [ $rc -gt 0 ]; then
     echo -e "\e[91mError [$rc] popping from the stash"
+  fi
+
+  display_prompt
+}
+
+function git_revert {
+  cd $gitDir
+
+  read -p 'commit to revert: ' commit
+
+  if [ -z "$commit" ]; then
+    echo -e "\e[91mA commit number must be provided"
+  else
+    git revert $commit
+
+    rc=$?
+    if [ $rc -gt 0 ]; then
+      echo -e "\e[91mError [$rc] reverting commit $commit"
+    fi
   fi
 
   display_prompt
