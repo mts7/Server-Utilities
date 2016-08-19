@@ -11,7 +11,7 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.22'
+version='1.23'
 
 function display_prompt {
   set_current
@@ -444,13 +444,19 @@ function git_remote {
 function git_reset {
   cd $gitDir
 
-  git reset --hard
-  rc=$?
+  read -p 'commit name: ' commit
 
-  if [ $rc -gt 0 ]; then
-    echo -e "\e[91mError [$rc] with reset"
-  else
-    echo -e "\e[92mReset the branch"
+  read -p "Are you sure you want to reset $default_branch? [y/n]" answer
+
+  if [ "$answer" = 'y' ]; then
+    git reset --hard $commit
+    rc=$?
+
+    if [ $rc -gt 0 ]; then
+      echo -e "\e[91mError [$rc] with reset"
+    else
+      echo -e "\e[92mReset the branch"
+    fi
   fi
 
   display_prompt
