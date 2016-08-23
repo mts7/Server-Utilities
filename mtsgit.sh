@@ -1,18 +1,22 @@
-#!/bin/bash
+bin/bash
 # Author: Mike Rodarte
 #
 # Interactive script for git shortcuts and scripts
 
 . ~/.bashrc
 
+# Variables BEGIN
 gitDir=${gitDir:-'/var/www/html'}
 prompt="MTSgit> "
 default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.24.1'
+version='1.25'
 stamp=''
+menuTemp=''
+menuFile='../mtstemp_branches'
+menuValue=''
 
 # set directory for history file location
 cd $gitDir
@@ -110,7 +114,7 @@ function git_add {
     if [ $i -eq 1 ]; then
       git status -s
     fi
-    read -p $'\e[91mPlease specify a file name: \e[0m' files
+    read -e -p $'\e[91mPlease specify a file name: \e[0m' files
     datetimestamp
     echo -e "\e[35m$stamp   \e[33m$files\e[0m" >> $history_file
   done
@@ -233,6 +237,14 @@ function git_delete {
   echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> $history_file
   branch=${branch:-$default_branch}
 
+  if [ "$branch" = "menu" ]; then
+    menu_branch
+    branch="$menuValue"
+
+    # use the found branch or the default branch (if no branch was found)
+    branch=${branch:-$default_branch}
+  fi
+
   to_delete=1
   if [ "$branch" = $default_truth ]; then
     echo -e "\e[101mDeleting the default truth branch is not recommended."
@@ -321,6 +333,15 @@ function git_log {
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> $history_file
   branch=${branch:-$default_branch}
+
+  if [ "$branch" = "menu" ]; then
+    menu_branch
+    branch="$menuValue"
+
+    # use the found branch or the default branch (if no branch was found)
+    branch=${branch:-$default_branch}
+  fi
+
   read -p "author (blank for all): " author
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$author\e[0m" >> $history_file
@@ -367,6 +388,14 @@ function git_merge {
   echo -e "\e[35m$stamp   \e[33m$branchCode\e[0m" >> $history_file
   branchCode=${branchCode:-$default_branch}
 
+  if [ "$branchCode" = "menu" ]; then
+    menu_branch
+    branchCode="$menuValue"
+
+    # use the found branch or the default branch (if no branch was found)
+    branchCode=${branchCode:-$default_branch}
+  fi
+
   read -p "server branch name: " branchServer
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$branchServer\e[0m" >> $history_file
@@ -401,13 +430,13 @@ function git_merge {
       rc=$?
       if [ $rc -gt 0 ]; then
         echo -e "\e[91mError [$rc]; aborting branch merge"
-	echo -e "\e[93mPlease fix the conflicts and then push"
+        echo -e "\e[93mPlease fix the conflicts and then push"
       else
         git pull --no-rebase -v "origin"
         rc=$?
         if [ $rc -gt 0 ]; then
           echo -e "\e[91mError [$rc]; aborting pull after merge"
-	  echo -e "\e[93mPlease fix the issue and then push"
+          echo -e "\e[93mPlease fix the issue and then push"
         else
           git push "origin" $branchServer:$branchServer
           rc=$?
@@ -480,11 +509,23 @@ function git_remote {
   echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> $history_file
   branch=${branch:-$default_branch}
 
-  git push -u $branch
-  rc=$?
+  if [ "$branch" = "menu" ]; then
+    menu_branch
+    branch="$menuValue"
 
-  if [ $rc -gt 0 ]; then
-    echo -e "\e[91mError [$rc] making branch $branch remote"
+    # use the found branch or the default branch (if no branch was found)
+    branch=${branch:-$default_branch}
+  fi
+
+  if [ -z $branch ]; then
+    echo -e "\e[91Please enter a branch name\e[0m"
+  else
+    git push -u $branch
+    rc=$?
+
+    if [ $rc -gt 0 ]; then
+      echo -e "\e[91mError [$rc] making branch $branch remote"
+    fi
   fi
 
   display_prompt
@@ -578,6 +619,14 @@ function git_switch {
   echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> $history_file
   branch=${branch:-$default_branch}
 
+  if [ "$branch" = "menu" ]; then
+    menu_branch
+    branch="$menuValue"
+
+    # use the found branch or the default branch (if no branch was found)
+    branch=${branch:-$default_branch}
+  fi
+
   git checkout $branch
   rc=$?
 
@@ -607,6 +656,68 @@ function git_undo {
   fi
 
   display_prompt
+}
+
+function menu_branch {
+  menuFile='../mtstemp_branches'
+
+  # write all of the current prefix's local branches to a file
+  command="git branch | egrep '${prefix}-' > $menuFile"
+  eval ${command}
+
+  # prepare lines for menu usage
+  menuTemp=`cat $menuFile`
+
+  # loop through file to display branches and their corresponding index in menuTemp
+  i=0
+  while read line; do
+    if [ $i -eq 30 ]; then
+      break
+    fi
+    i=$[$i+1]
+    printf "%2s: %s\n" "$i" "$line"
+  done < "$menuFile"
+
+  read -p "branch number: " branchMenuItem
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$branchMenuItem\e[0m" >> $history_file
+
+  i="0"
+  while [ -z $branchMenuItem ]; do
+    if [ $i -eq 3 ]; then
+      break
+    fi
+    i=$[$i+1]
+    read -p $'\e[91mPlease specify a number of a branch menu item: \e[0m' branchMenuItem
+    datetimestamp
+    echo -e "\e[35m$stamp   \e[33m$branchMenuItem\e[0m" >> $history_file
+  done
+
+  if [ -z $branchMenuItem ]; then
+    echo -e "\e[91mA local branch menu item number must be specified\e[0m"
+  else
+    # get the branch name from the file at the specified line
+    localBranch=$(sed "${branchMenuItem}q;d" $menuFile)
+    rc=$?
+    if [ $rc -gt 0 ]; then
+      echo -e "\e[91mError [$rc] with sed.\e[0m"
+    else
+      # trim leading spaces from the branch name
+      localBranch=`echo "$localBranch" | xargs`
+
+      # check for current branch (denoted by "* " before the branch name)
+      first=$(echo "${localBranch}" | cut -d' ' -f 1)
+      if [ "$first" = "*" ]; then
+        localBranch="${localBranch:2}"
+      fi
+
+      echo "using branch $localBranch"
+
+      # set global variable
+      menuValue="$localBranch"
+    fi
+  fi
+
 }
 
 function script_history {
@@ -696,6 +807,7 @@ function datetimestamp {
 }
 
 function quit {
+  rm -f $menuFile
   echo 'Thank you for using MTSgit'
   exit 0
 }
@@ -712,4 +824,3 @@ echo
 
 script_set_current
 display_prompt
-
