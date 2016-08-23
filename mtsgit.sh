@@ -12,7 +12,7 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.25.2'
+version='1.25.3'
 stamp=''
 
 # set directory for history file location
@@ -77,21 +77,23 @@ function show_commands {
   echo 'commit              Commit changes to local branch or repository'
   echo 'create              Create a new branch'
   echo 'current             Display the current branch'
-  echo 'delete              Delete a branch'
+  echo 'delete              Delete a branch*'
   echo 'list                List branches'
-  echo 'log                 Display the Commit History of a branch'
-  echo 'merge               Merge two branches'
+  echo 'log                 Display the Commit History of a branch*'
+  echo 'merge               Merge two branches*'
   echo 'message             Update a message to the last commit'
   echo 'pull                Fetch or merge changes with remote server'
   echo 'push                Push the current branch to origin'
-  echo 'remote              Make a local branch remote'
+  echo 'remote              Make a local branch* remote'
   echo 'reset               Discard all changes and reset index and working tree'
   echo 'restore             Restore the latest stash'
   echo 'revert              Revert a commit'
   echo 'save                Stash the current changes'
   echo 'status              List the files changed and need to be added'
-  echo 'switch              Switch to a branch'
+  echo 'switch              Switch to a branch*'
   echo 'undo                Undo a commit'
+  echo
+  echo '* shows commands that accept the menu parameter at some branch prompts'
 
   display_prompt
 }
@@ -100,8 +102,10 @@ function git_add {
   cd $gitDir
 
   read -e -p 'file name: ' files
-  datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$files\e[0m" >> $history_file
+  if [ -n "$files" ]; then
+    datetimestamp
+    echo -e "\e[35m$stamp   \e[33m$files\e[0m" >> $history_file
+  fi
 
   i="0"
   while [ -z $files ]
@@ -115,8 +119,10 @@ function git_add {
       git status -s
     fi
     read -e -p $'\e[91mPlease specify a file name: \e[0m' files
-    datetimestamp
-    echo -e "\e[35m$stamp   \e[33m$files\e[0m" >> $history_file
+    if [ -n "$files" ]; then
+      datetimestamp
+      echo -e "\e[35m$stamp   \e[33m$files\e[0m" >> $history_file
+    fi
   done
 
   if [ -z $files ]; then
@@ -158,8 +164,10 @@ function git_commit {
   cd $gitDir
 
   read -p "message: " message
-  datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$message\e[0m" >> $history_file
+  if [ -n "$message" ]; then
+    datetimestamp
+    echo -e "\e[35m$stamp   \e[33m$message\e[0m" >> $history_file
+  fi
 
   i="0"
   while [ -z $message ]
@@ -169,8 +177,10 @@ function git_commit {
     fi
     i=$[$i+1]
     read -p $'\e[91mPlease specify a commit message: \e[0m' message
-    datetimestamp
-    echo -e "\e[35m$stamp   \e[33m$message\e[0m" >> $history_file
+    if [ -n "$message" ]; then
+      datetimestamp
+      echo -e "\e[35m$stamp   \e[33m$message\e[0m" >> $history_file
+    fi
   done
 
   if [ -z $message ]; then
@@ -345,7 +355,7 @@ function git_log {
   read -p "author (blank for all): " author
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$author\e[0m" >> $history_file
-  read -e -p "file relative to bio-techne.com (blank for all): " file
+  read -e -p "file relative to repo root (blank for all): " file
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$file\e[0m" >> $history_file
 
@@ -397,8 +407,10 @@ function git_merge {
   fi
 
   read -p "server branch name: " branchServer
-  datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$branchServer\e[0m" >> $history_file
+  if [ -n "$branchServer" ]; then
+    datetimestamp
+    echo -e "\e[35m$stamp   \e[33m$branchServer\e[0m" >> $history_file
+  fi
 
   i="0"
   while [ -z $branchServer ]
@@ -414,8 +426,10 @@ function git_merge {
       eval ${command}
     fi
     read -p $'\e[91mPlease specify a server branch name: \e[0m' branchServer
-    datetimestamp
-    echo -e "\e[35m$stamp   \e[33m$branchServer\e[0m" >> $history_file
+    if [ -n "$branchServer" ]; then
+      datetimestamp
+      echo -e "\e[35m$stamp   \e[33m$branchServer\e[0m" >> $history_file
+    fi
   done
 
   if [ -z $branchServer ]; then
@@ -679,8 +693,10 @@ function menu_branch {
   done < "$menuFile"
 
   read -p "branch number: " branchMenuItem
-  datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$branchMenuItem\e[0m" >> $history_file
+  if [ -n "$branchMenuItem" ]; then
+    datetimestamp
+    echo -e "\e[35m$stamp   \e[33m$branchMenuItem\e[0m" >> $history_file
+  fi
 
   i="0"
   while [ -z $branchMenuItem ]; do
@@ -689,8 +705,10 @@ function menu_branch {
     fi
     i=$[$i+1]
     read -p $'\e[91mPlease specify a number of a branch menu item: \e[0m' branchMenuItem
-    datetimestamp
-    echo -e "\e[35m$stamp   \e[33m$branchMenuItem\e[0m" >> $history_file
+    if [ -n "$branchMenuItem" ]; then
+      datetimestamp
+      echo -e "\e[35m$stamp   \e[33m$branchMenuItem\e[0m" >> $history_file
+    fi
   done
 
   if [ -z $branchMenuItem ]; then
@@ -750,8 +768,10 @@ function script_set_current {
 
 function script_truth {
   read -p "default source of truth branch: " truth
-  datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$truth\e[0m" >> $history_file
+  if [ -n "$truth" ]; then
+    datetimestamp
+    echo -e "\e[35m$stamp   \e[33m$truth\e[0m" >> $history_file
+  fi
 
   i="0"
   while [ -z $truth ]
@@ -761,8 +781,10 @@ function script_truth {
     fi
     i=$[$i+1]
     read -p $'\e[91mPlease specify the source of truth: \e[0m' truth
-  datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$truth\e[0m" >> $history_file
+    if [ -n "$truth" ]; then
+      datetimestamp
+      echo -e "\e[35m$stamp   \e[33m$truth\e[0m" >> $history_file
+    fi
   done
 
   if [ -z $truth ]; then
