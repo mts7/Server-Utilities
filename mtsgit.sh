@@ -1,4 +1,4 @@
-bin/bash
+#!/bin/bash
 # Author: Mike Rodarte
 #
 # Interactive script for git shortcuts and scripts
@@ -12,7 +12,7 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.25.1'
+version='1.25.2'
 stamp=''
 
 # set directory for history file location
@@ -721,7 +721,7 @@ function menu_branch {
 }
 
 function script_history {
-  less -r $history_file
+  less +G -r -N $history_file
 
   display_prompt
 }
