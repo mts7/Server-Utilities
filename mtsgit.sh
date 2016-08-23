@@ -12,17 +12,17 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.25'
+version='1.25.1'
 stamp=''
-menuTemp=''
-menuFile='../mtstemp_branches'
-menuValue=''
 
 # set directory for history file location
 cd $gitDir
 cd ..
 
 history_file="$PWD/.mtsgit_history"
+menuTemp=''
+menuFile="$PWD/mtstemp_branches"
+menuValue=''
 # Variables END
 
 function display_prompt {
