@@ -11,15 +11,26 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.23'
+version='1.24.1'
+stamp=''
+
+# set directory for history file location
+cd $gitDir
+cd ..
+
+history_file="$PWD/.mtsgit_history"
+# Variables END
 
 function display_prompt {
   set_current
 
   echo
   read -p $'\e[95m'"$prompt"$'\e[0m' choice
+  datetimestamp
+  echo -e "\e[35m$stamp\e[0m $choice\e[0m" >> $history_file
   case "$choice" in
     help) show_commands;;
+    history) script_history;;
     set) script_set;;
     truth) script_truth;;
     v) script_variables;;
@@ -64,7 +75,7 @@ function show_commands {
   echo 'current             Display the current branch'
   echo 'delete              Delete a branch'
   echo 'list                List branches'
-  echo 'log                 Display the Commit History for the past week'
+  echo 'log                 Display the Commit History of a branch'
   echo 'merge               Merge two branches'
   echo 'message             Update a message to the last commit'
   echo 'pull                Fetch or merge changes with remote server'
@@ -84,7 +95,9 @@ function show_commands {
 function git_add {
   cd $gitDir
 
-  read -p 'file name: ' files
+  read -e -p 'file name: ' files
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$files\e[0m" >> $history_file
 
   i="0"
   while [ -z $files ]
@@ -98,6 +111,8 @@ function git_add {
       git status -s
     fi
     read -p $'\e[91mPlease specify a file name: \e[0m' files
+    datetimestamp
+    echo -e "\e[35m$stamp   \e[33m$files\e[0m" >> $history_file
   done
 
   if [ -z $files ]; then
@@ -118,8 +133,12 @@ function git_changes {
   cd $gitDir
 
   read -p "branch or commit name [${default_branch}]: " changed
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$changed\e[0m" >> $history_file
   changed=${changed:-$default_branch}
   read -p "source of truth name [${default_truth}]: " truth
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$truth\e[0m" >> $history_file
   truth=${truth:-$default_truth}
 
   git diff --name-only $changed $truth
@@ -135,6 +154,8 @@ function git_commit {
   cd $gitDir
 
   read -p "message: " message
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$message\e[0m" >> $history_file
 
   i="0"
   while [ -z $message ]
@@ -144,6 +165,8 @@ function git_commit {
     fi
     i=$[$i+1]
     read -p $'\e[91mPlease specify a commit message: \e[0m' message
+    datetimestamp
+    echo -e "\e[35m$stamp   \e[33m$message\e[0m" >> $history_file
   done
 
   if [ -z $message ]; then
@@ -164,6 +187,8 @@ function git_create {
   cd $gitDir
 
   read -p "new branch name [${default_branch}]: " branch
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> $history_file
   branch=${branch:-$default_branch}
 
   git checkout $default_truth
@@ -204,6 +229,8 @@ function git_delete {
   git checkout $default_truth
 
   read -p "branch name [${default_branch}]: " branch
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> $history_file
   branch=${branch:-$default_branch}
 
   to_delete=1
@@ -237,10 +264,14 @@ function git_list {
   cd $gitDir
 
   read -p 'remote [y/n]: ' remote
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$remote\e[0m" >> $history_file
 
   command='git branch'
 
   read -p "filter: " filter
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$filter\e[0m" >> $history_file
 
   if [ "$remote" = "y" ]; then
     command="$command -r"
@@ -287,12 +318,20 @@ function git_log {
   cd $gitDir
 
   read -p "branch name [${default_branch}]: " branch
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> $history_file
   branch=${branch:-$default_branch}
   read -p "author (blank for all): " author
-  read -p "file relative to bio-techne.com (blank for all): " file
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$author\e[0m" >> $history_file
+  read -e -p "file relative to bio-techne.com (blank for all): " file
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$file\e[0m" >> $history_file
 
   default_days=7
   read -p "days ago [${default_days}]: " days
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$days\e[0m" >> $history_file
   if [ "$days" -eq "$days" ] > /dev/null 2>&1
   then
     days=$days
@@ -324,9 +363,13 @@ function git_merge {
   cd $gitDir
 
   read -p "code branch name [${default_branch}]: " branchCode
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$branchCode\e[0m" >> $history_file
   branchCode=${branchCode:-$default_branch}
 
   read -p "server branch name: " branchServer
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$branchServer\e[0m" >> $history_file
 
   i="0"
   while [ -z $branchServer ]
@@ -342,6 +385,8 @@ function git_merge {
       eval ${command}
     fi
     read -p $'\e[91mPlease specify a server branch name: \e[0m' branchServer
+    datetimestamp
+    echo -e "\e[35m$stamp   \e[33m$branchServer\e[0m" >> $history_file
   done
 
   if [ -z $branchServer ]; then
@@ -381,6 +426,8 @@ function git_message {
   cd $gitDir
 
   read -p 'new commit message: ' message
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$message\e[0m" >> $history_file
 
   if [ -n "$message" ]; then
     git commit --amend -m "$message"
@@ -429,6 +476,8 @@ function git_remote {
   cd $gitDir
 
   read -p "branch name [${default_branch}]: " branch
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> $history_file
   branch=${branch:-$default_branch}
 
   git push -u $branch
@@ -445,8 +494,12 @@ function git_reset {
   cd $gitDir
 
   read -p 'commit name: ' commit
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$commit\e[0m" >> $history_file
 
   read -p "Are you sure you want to reset $default_branch? [y/n]" answer
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$answer\e[0m" >> $history_file
 
   if [ "$answer" = 'y' ]; then
     git reset --hard $commit
@@ -479,6 +532,8 @@ function git_revert {
   cd $gitDir
 
   read -p 'commit to revert: ' commit
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$commit\e[0m" >> $history_file
 
   if [ -z "$commit" ]; then
     echo -e "\e[91mA commit number must be provided"
@@ -519,6 +574,8 @@ function git_switch {
   cd $gitDir
 
   read -p "branch name [${default_branch}]: " branch
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> $history_file
   branch=${branch:-$default_branch}
 
   git checkout $branch
@@ -552,6 +609,12 @@ function git_undo {
   display_prompt
 }
 
+function script_history {
+  less -r $history_file
+
+  display_prompt
+}
+
 function script_prefix {
   temp_array=(${default_branch//-/ })
   prefix="${temp_array[0]}"
@@ -576,6 +639,8 @@ function script_set_current {
 
 function script_truth {
   read -p "default source of truth branch: " truth
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$truth\e[0m" >> $history_file
 
   i="0"
   while [ -z $truth ]
@@ -585,6 +650,8 @@ function script_truth {
     fi
     i=$[$i+1]
     read -p $'\e[91mPlease specify the source of truth: \e[0m' truth
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$truth\e[0m" >> $history_file
   done
 
   if [ -z $truth ]; then
@@ -614,6 +681,7 @@ function script_variables {
   echo -e "default_truth: \e[96m$default_truth\e[0m"
   echo -e "current_branch: \e[36m$current_branch\e[0m"
   echo -e "prefix: \e[35m$prefix\e[0m"
+  echo -e "history_file: $history_file\e[0m"
   echo -e "version: \e[94m$version\e[0m"
 
   display_prompt
@@ -621,6 +689,10 @@ function script_variables {
 
 function set_current {
   current_branch=$(git rev-parse --abbrev-ref HEAD)
+}
+
+function datetimestamp {
+  stamp=`date +%Y-%m-%d_%H:%M:%S`
 }
 
 function quit {
