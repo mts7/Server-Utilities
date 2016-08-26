@@ -7,12 +7,12 @@
 
 # Variables BEGIN
 gitDir=${gitDir:-'/var/www/html'}
-prompt="MTSgit> "
+prompt="MTSgit"
 default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.25.3'
+version='1.25.4'
 stamp=''
 
 # set directory for history file location
@@ -29,7 +29,7 @@ function display_prompt {
   set_current
 
   echo
-  read -p $'\e[95m'"$prompt"$'\e[0m' choice
+  read -p $'\e[95m'"$prompt"$'\e[36m'" $current_branch"$'\e[95m'"> "$'\e[0m' choice
   datetimestamp
   echo -e "\e[35m$stamp\e[0m $choice\e[0m" >> $history_file
   case "$choice" in
