@@ -12,7 +12,7 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.25.4'
+version='1.25.5'
 stamp=''
 
 # set directory for history file location
@@ -534,7 +534,7 @@ function git_remote {
   if [ -z $branch ]; then
     echo -e "\e[91Please enter a branch name\e[0m"
   else
-    git push -u $branch
+    git push -u origin $branch
     rc=$?
 
     if [ $rc -gt 0 ]; then
@@ -735,7 +735,6 @@ function menu_branch {
       menuValue="$localBranch"
     fi
   fi
-
 }
 
 function script_history {
