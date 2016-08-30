@@ -12,7 +12,7 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.26'
+version='1.27'
 stamp=''
 
 # set directory for history file location
@@ -87,7 +87,7 @@ function show_commands {
   echo 'remote              Make a local branch* remote'
   echo 'reset               Discard all changes and reset index* and working tree'
   echo 'restore             Restore the latest stash'
-  echo 'revert              Revert a commit'
+  echo 'revert              Revert a commit*'
   echo 'save                Stash the current changes'
   echo 'status              List the files changed and need to be added'
   echo 'switch              Switch to a branch*'
@@ -146,6 +146,7 @@ function git_changes {
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$changed\e[0m" >> $history_file
   changed=${changed:-$default_branch}
+
   read -p "source of truth name [${default_truth}]: " truth
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$truth\e[0m" >> $history_file
@@ -355,6 +356,7 @@ function git_log {
   read -p "author (blank for all): " author
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$author\e[0m" >> $history_file
+
   read -e -p "file relative to repo root (blank for all): " file
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$file\e[0m" >> $history_file
@@ -363,6 +365,7 @@ function git_log {
   read -p "days ago [${default_days}]: " days
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$days\e[0m" >> $history_file
+
   if [ "$days" -eq "$days" ] > /dev/null 2>&1
   then
     days=$days
@@ -548,6 +551,19 @@ function git_remote {
 function git_reset {
   cd $gitDir
 
+  read -p "branch name [${default_branch}]: " branch
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> $history_file
+  branch=${branch:-$default_branch}
+
+  if [ "$branch" = "menu" ]; then
+    menu_branch
+    branch="$menuValue"
+
+    # use the found branch or the default branch (if no branch was found)
+    branch=${branch:-$default_branch}
+  fi
+
   read -p 'commit name: ' commit
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$commit\e[0m" >> $history_file
@@ -594,6 +610,11 @@ function git_revert {
   read -p 'commit to revert: ' commit
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$commit\e[0m" >> $history_file
+
+  if [ "$commit" = "menu" ]; then
+    menu_commit
+    commit="$menuValue"
+  fi
 
   if [ -z "$commit" ]; then
     echo -e "\e[91mA commit number must be provided"
