@@ -12,7 +12,7 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.25.5'
+version='1.26'
 stamp=''
 
 # set directory for history file location
@@ -21,7 +21,7 @@ cd ..
 
 history_file="$PWD/.mtsgit_history"
 menuTemp=''
-menuFile="$PWD/mtstemp_branches"
+menuFile="$PWD/mtstemp_menu"
 menuValue=''
 # Variables END
 
@@ -85,7 +85,7 @@ function show_commands {
   echo 'pull                Fetch or merge changes with remote server'
   echo 'push                Push the current branch to origin'
   echo 'remote              Make a local branch* remote'
-  echo 'reset               Discard all changes and reset index and working tree'
+  echo 'reset               Discard all changes and reset index* and working tree'
   echo 'restore             Restore the latest stash'
   echo 'revert              Revert a commit'
   echo 'save                Stash the current changes'
@@ -552,7 +552,12 @@ function git_reset {
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$commit\e[0m" >> $history_file
 
-  read -p "Are you sure you want to reset $default_branch? [y/n]" answer
+  if [ "$commit" = "menu" ]; then
+    menu_commit
+    commit="$menuValue"
+  fi
+
+  read -p "Are you sure you want to reset $current_branch? [y/n] " answer
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$answer\e[0m" >> $history_file
 
@@ -672,67 +677,128 @@ function git_undo {
   display_prompt
 }
 
-function menu_branch {
-  menuFile='../mtstemp_branches'
+function menu_adjust_branch () {
+  if [ -z "$1" ]; then
+    return 1
+  else
+    localBranch="$1"
 
-  # write all of the current prefix's local branches to a file
-  command="git branch | egrep '${prefix}-' > $menuFile"
-  eval ${command}
+    # trim leading spaces from the branch name
+    localBranch=`echo "$localBranch" | xargs`
+  fi
+
+  menuValue="${localBranch}"
+}
+
+function menu_adjust_commit () {
+  if [ -z "$1" ]; then
+    return 1
+  else
+    value="$1"
+  fi
+
+  menuValue="${value:0:7}"
+}
+
+function menu_branch {
+  cd $gitDir
+
+  menu_display "git branch | egrep '${prefix}-' > $menuFile" 'branch number' 30 'menu_adjust_branch'
+}
+
+function menu_commit {
+  cd $gitDir
+
+  menu_display "git log --oneline --decorate -10 > $menuFile" 'commit number' 10 'menu_adjust_commit'
+}
+
+function menu_display () {
+  cd $gitDir
+
+  # validate arguments
+  if [ -z "$1" ]; then
+    echo -e "\e[91mmenu_display was called without a command parameter"
+    return 1
+  else
+    command="$1"
+  fi
+
+  if [ -z "$2" ]; then
+    echo -e "\e[91mmenu_display was called without a prompt parameter"
+    return 2
+  else
+    menuPrompt="$2"
+  fi
+
+  if [ -z "$3" ]; then
+    echo -e "\e[91mmenu_display was called without a number of items parameter"
+    return 3
+  else
+    itemNumbers="$3"
+  fi
+
+  if [ -z "$4" ]; then
+    echo -e "\e[91mmenu_display was called without a value manipulation function parameter"
+    return 4
+  else
+    menuFunction="$4"
+  fi
+
+  # execute the command and write the contents to the menuFile
+  eval "${command}"
 
   # prepare lines for menu usage
   menuTemp=`cat $menuFile`
 
-  # loop through file to display branches and their corresponding index in menuTemp
+  # loop through file to display items and their corresponding index in menuTemp
   i=0
   while read line; do
-    if [ $i -eq 30 ]; then
+    if [ $i -eq $itemNumbers ]; then
       break
     fi
     i=$[$i+1]
     printf "%2s: %s\n" "$i" "$line"
   done < "$menuFile"
 
-  read -p "branch number: " branchMenuItem
-  if [ -n "$branchMenuItem" ]; then
+  read -p "${menuPrompt}: " menuItem
+  if [ -n "$menuItem" ]; then
     datetimestamp
-    echo -e "\e[35m$stamp   \e[33m$branchMenuItem\e[0m" >> $history_file
+    echo -e "\e[35m$stamp   \e[33m$menuItem\e[0m" >> $history_file
   fi
 
-  i="0"
-  while [ -z $branchMenuItem ]; do
+  # give the user 3 chances to enter something valid
+  i=0
+  while [ -z $menuItem ]; do
     if [ $i -eq 3 ]; then
       break
     fi
     i=$[$i+1]
-    read -p $'\e[91mPlease specify a number of a branch menu item: \e[0m' branchMenuItem
-    if [ -n "$branchMenuItem" ]; then
+    read -p $'\e[91mPlease specify a number of a ${menuPrompt} menu item: \e[0m' menuItem
+    if [ -n "$menuItem" ]; then
       datetimestamp
-      echo -e "\e[35m$stamp   \e[33m$branchMenuItem\e[0m" >> $history_file
+      echo -e "\e[35m$stamp   \e[33m$menuItem\e[0m" >> $history_file
     fi
   done
 
-  if [ -z $branchMenuItem ]; then
-    echo -e "\e[91mA local branch menu item number must be specified\e[0m"
+  if [ -z $menuItem ]; then
+    echo -e "\e[91mA ${menuPrompt} menu item number must be specified\e[0m"
   else
-    # get the branch name from the file at the specified line
-    localBranch=$(sed "${branchMenuItem}q;d" $menuFile)
+    # get the value from the file at the specified line
+    value=$(sed "${menuItem}q;d" $menuFile)
     rc=$?
     if [ $rc -gt 0 ]; then
       echo -e "\e[91mError [$rc] with sed.\e[0m"
     else
-      # trim leading spaces from the branch name
-      localBranch=`echo "$localBranch" | xargs`
-
       # check for current branch (denoted by "* " before the branch name)
-      first=$(echo "${localBranch}" | cut -d' ' -f 1)
+      first=$(echo "${value}" | cut -d' ' -f 1)
       if [ "$first" = "*" ]; then
-        localBranch="${localBranch:2}"
+        value="${value:2}"
       fi
 
-      echo "using branch $localBranch"
+      # execute function with this value
+      eval $menuFunction "$value"
 
-      # set global variable
-      menuValue="$localBranch"
+      echo "using value $menuValue"
     fi
   fi
 }
