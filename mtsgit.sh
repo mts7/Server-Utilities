@@ -12,7 +12,7 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.27'
+version='1.28'
 stamp=''
 
 # set directory for history file location
@@ -624,6 +624,18 @@ function git_revert {
     rc=$?
     if [ $rc -gt 0 ]; then
       echo -e "\e[91mError [$rc] reverting commit $commit"
+    else
+      git pull
+      rc=$?
+      if [ $rc -gt 0 ]; then
+        echo -e "\e[91mError [$rc]; aborting pull"
+      else
+        git push
+        rc=$?
+        if [ $rc -gt 0 ]; then
+          echo -e "\e[91mError [$rc]; aborting push after pull"
+        fi
+      fi
     fi
   fi
 
