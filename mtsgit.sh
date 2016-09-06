@@ -12,7 +12,7 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.28.1'
+version='1.29'
 stamp=''
 
 # set directory for history file location
@@ -572,6 +572,18 @@ function git_reset {
     branch=${branch:-$default_branch}
   fi
 
+  if [ "$branch" != "$current_branch" ]; then
+    git checkout $branch
+    rc=$?
+
+    if [ $rc -gt 0 ]; then
+      echo -e "\e[91mError [$rc] checking out $branch"
+      echo "using $current_branch instead of $branch"
+      branch="$current_branch"
+    fi
+    script_set_current
+  fi
+
   read -p 'commit name: ' commit
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$commit\e[0m" >> $history_file
@@ -581,7 +593,7 @@ function git_reset {
     commit="$menuValue"
   fi
 
-  read -p "Are you sure you want to reset $current_branch? [y/n] " answer
+  read -p "Are you sure you want to reset $branch? [y/n] " answer
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$answer\e[0m" >> $history_file
 
