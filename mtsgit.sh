@@ -7,12 +7,12 @@
 
 # Variables BEGIN
 gitDir=${gitDir:-'/var/www/html'}
-prompt="MTSgit"
+prompt='MTSgit'
 default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.28'
+version='1.28.1'
 stamp=''
 
 # set directory for history file location
@@ -146,6 +146,14 @@ function git_changes {
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$changed\e[0m" >> $history_file
   changed=${changed:-$default_branch}
+
+  if [ "$changed" = "menu" ]; then
+    menu_branch
+    changed="$menuValue"
+
+    # use the found branch or the default branch (if no branch was found)
+    changed=${changed:-$default_branch}
+  fi
 
   read -p "source of truth name [${default_truth}]: " truth
   datetimestamp
