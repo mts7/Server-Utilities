@@ -3,7 +3,9 @@
 #
 # Interactive script for git shortcuts and scripts
 
-. ~/.bashrc
+if [ -e ~/.bashrc ]; then
+  . ~/.bashrc
+fi
 
 # Variables BEGIN
 gitDir=${gitDir:-'/var/www/html'}
@@ -12,8 +14,19 @@ default_branch=''
 default_truth='master'
 current_branch=''
 prefix=''
-version='1.29'
+version='1.30'
 stamp=''
+
+i="0"
+while [ ! -d "$gitDir" ]; do
+  if [ $i -eq 5 ]; then
+    echo -e "\e[91mPlease specify the correct git directory and try again.\e[0m"
+    exit 1
+  fi
+  i=$[$i+1]
+
+  read -e -p 'Please specify the git directory: ' gitDir
+done
 
 # set directory for history file location
 cd $gitDir
