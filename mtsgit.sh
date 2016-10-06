@@ -936,7 +936,7 @@ function script_truth {
     cd $gitDir
 
     # check to see if the $truth branch actually exists before setting default
-    lines=$(eval "git branch | egrep '^\s*${truth}$' | wc -l")
+    lines=$(eval "git branch | egrep '^\**\s*${truth}$' | wc -l")
     if [ "$lines" = "1" ]; then
       default_truth="$truth"
       echo -e "\e[92mSet default source of truth to \e[96m${default_truth}"
@@ -982,7 +982,7 @@ prompt='MTSgit'
 default_branch=''
 current_branch=''
 prefix=''
-version='1.31'
+version='1.32'
 stamp=''
 inGit=''
 originalGitDir="$gitDir"
