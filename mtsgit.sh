@@ -977,7 +977,6 @@ function quit {
   exit 0
 }
 
-
 # Script Variables
 prompt='MTSgit'
 default_branch=''
@@ -986,6 +985,7 @@ prefix=''
 version='1.31'
 stamp=''
 inGit=''
+originalGitDir="$gitDir"
 
 # check for directory existence
 if [ ! -d "$gitDir" ]; then
@@ -996,8 +996,6 @@ if [ ! -d "$gitDir" ]; then
     exit 1
   fi
 fi
-
-originalGitDir="$gitDir"
 
 # check for git directory
 script_in_git_dir
