@@ -8,34 +8,9 @@ if [ -e ~/.bashrc ]; then
 fi
 
 # Variables BEGIN
+# User Variables
 gitDir=${gitDir:-'/var/www/html'}
-prompt='MTSgit'
-default_branch=''
 default_truth='master'
-current_branch=''
-prefix=''
-version='1.30'
-stamp=''
-
-i="0"
-while [ ! -d "$gitDir" ]; do
-  if [ $i -eq 5 ]; then
-    echo -e "\e[91mPlease specify the correct git directory and try again.\e[0m"
-    exit 1
-  fi
-  i=$[$i+1]
-
-  read -e -p 'Please specify the git directory: ' gitDir
-done
-
-# set directory for history file location
-cd $gitDir
-cd ..
-
-history_file="$PWD/.mtsgit_history"
-menuTemp=''
-menuFile="$PWD/mtstemp_menu"
-menuValue=''
 # Variables END
 
 function display_prompt {
@@ -46,6 +21,7 @@ function display_prompt {
   datetimestamp
   echo -e "\e[35m$stamp\e[0m $choice\e[0m" >> $history_file
   case "$choice" in
+    dir) script_dir;;
     help) show_commands;;
     history) script_history;;
     set) script_set;;
@@ -79,6 +55,7 @@ function display_prompt {
 function show_commands {
   echo 'Available commands'
   echo
+  echo 'dir                 Set the git directory'
   echo 'help                Show this command list'
   echo 'set                 Set the default branch name'
   echo 'truth               Set the default source of truth branch'
@@ -869,10 +846,45 @@ function menu_display () {
   fi
 }
 
+# TODO: save $gitDir to ~/.bashrc
+function script_dir {
+  read -e -p "Please specify the git directory[${gitDir}]: " gitDir
+
+  i="0"
+  while [ ! -d "$gitDir" ]; do
+    if [ $i -eq 5 ]; then
+      echo -e "\e[91mPlease specify the correct git directory and try again.\e[0m"
+      break
+    fi
+    i=$[$i+1]
+
+    read -e -p 'Please specify the git directory: ' gitDir
+  done
+
+  # check for git directory
+  script_in_git_dir
+  if [ "$inGit" != 'true' ]; then
+    echo -e "\e[91mCurrent git directory [${gitDir}] is not a valid working tree\e[0m"
+    gitDir="$originalGitDir"
+  fi
+
+  display_prompt
+}
+
 function script_history {
   less +G -r -N $history_file
 
   display_prompt
+}
+
+function script_in_git_dir {
+  cd $gitDir
+  inGit=$(git rev-parse --is-inside-work-tree)
+  rc=$?
+
+  if [ $rc -gt 0 ]; then
+    inGit='false'
+  fi
 }
 
 function script_prefix {
@@ -964,6 +976,45 @@ function quit {
   echo 'Thank you for using MTSgit'
   exit 0
 }
+
+
+# Script Variables
+prompt='MTSgit'
+default_branch=''
+current_branch=''
+prefix=''
+version='1.31'
+stamp=''
+inGit=''
+
+# check for directory existence
+if [ ! -d "$gitDir" ]; then
+  script_dir
+  if [ ! -d "$gitDir" ]; then
+    echo -e "\e[91mUnable to find directory $gitDir.\e[0m"
+    sleep 3
+    exit 1
+  fi
+fi
+
+originalGitDir="$gitDir"
+
+# check for git directory
+script_in_git_dir
+if [ "$inGit" != 'true' ]; then
+  echo -e "\e[91mCurrent git directory [${gitDir}] is not a valid working tree\e[0m"
+  sleep 5
+  exit 2
+fi
+
+# set directory for history file location
+cd $gitDir
+cd ..
+
+history_file="$PWD/.mtsgit_history"
+menuTemp=''
+menuFile="$PWD/mtstemp_menu"
+menuValue=''
 
 cd $gitDir
 
