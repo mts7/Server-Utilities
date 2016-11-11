@@ -306,7 +306,7 @@ function git_list {
     if [ $rc -gt 0 ]; then
       echo -e "\e[91mError [$rc] checking out $branch"
     else
-      git pull
+      git pull --no-rebase -v "origin"
       rc=$?
       if [ $rc -gt 0 ]; then
         echo -e "\e[91mError [$rc] with pull"
@@ -488,7 +488,7 @@ function git_message {
 function git_pull {
   cd $gitDir
 
-  git pull
+  git pull --no-rebase -v "origin"
   rc=$?
 
   if [ $rc -gt 0 ]; then
@@ -499,16 +499,19 @@ function git_pull {
 }
 
 function git_push {
-  cd $gitDir
+  cd ${gitDir}
 
-  git pull
+  git pull --no-rebase -v "origin"
   rc=$?
-  if [ $rc -gt 0 ]; then
+  if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc]; aborting pull"
   else
-    git push
+    defaultServer='origin'
+    read -p "server [$defaultServer]: " server
+    server=${server:-$defaultServer}
+    git push ${server}
     rc=$?
-    if [ $rc -gt 0 ]; then
+    if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc]; aborting push after pull"
     fi
   fi
@@ -635,7 +638,7 @@ function git_revert {
     if [ $rc -gt 0 ]; then
       echo -e "\e[91mError [$rc] reverting commit $commit"
     else
-      git pull
+      git pull --no-rebase -v "origin"
       rc=$?
       if [ $rc -gt 0 ]; then
         echo -e "\e[91mError [$rc]; aborting pull"
@@ -695,7 +698,7 @@ function git_switch {
   if [ $rc -gt 0 ]; then
     echo -e "\e[91mError [$rc] checking out $branch"
   else
-    git pull
+    git pull --no-rebase -v "origin"
     rc=$?
     if [ $rc -gt 0 ]; then
       echo -e "\e[91mError [$rc] with pull"
@@ -982,7 +985,7 @@ prompt='MTSgit'
 default_branch=''
 current_branch=''
 prefix=''
-version='1.32'
+version='1.33'
 stamp=''
 inGit=''
 originalGitDir="$gitDir"
