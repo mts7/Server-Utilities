@@ -11,6 +11,7 @@ fi
 # User Variables
 gitDir=${gitDir:-'/var/www/html'}
 default_truth='master'
+default_prod_server='production'
 # Variables END
 
 function display_prompt {
@@ -34,6 +35,7 @@ function display_prompt {
     create) git_create;;
     current) git_current;;
     delete) git_delete;;
+    deploy) git_deploy;;
     list) git_list;;
     log) git_log;;
     merge) git_merge;;
@@ -68,6 +70,7 @@ function show_commands {
   echo 'create              Create a new branch'
   echo 'current             Display the current branch'
   echo 'delete              Delete a branch*'
+  echo 'deploy              Merge and push a branch to a server'
   echo 'list                List branches'
   echo 'log                 Display the Commit History of a branch*'
   echo 'merge               Merge two branches*'
@@ -281,6 +284,74 @@ function git_delete {
   display_prompt
 }
 
+function git_deploy {
+  cd ${gitDir}
+
+  read -p "code branch name [${default_branch}]: " branchCode
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$branchCode\e[0m" >> ${history_file}
+  branchCode=${branchCode:-$default_branch}
+
+  if [ "$branchCode" = "menu" ]; then
+    menu_branch
+    branchCode="$menuValue"
+
+    # use the found branch or the default branch (if no branch was found)
+    branchCode=${branchCode:-$default_branch}
+  fi
+
+  read -p "server branch name: " branchServer
+  if [ -n "$branchServer" ]; then
+    datetimestamp
+    echo -e "\e[35m$stamp   \e[33m$branchServer\e[0m" >> ${history_file}
+  fi
+
+  i="0"
+  while [ -z ${branchServer} ]
+  do
+    if [ ${i} -eq 3 ]; then
+      break
+    fi
+    i=$[$i+1]
+    if [ ${i} -eq 1 ] && [ ! -z "$prefix" ]; then
+      echo -e "\e[93mDid you mean one of these branches?\e[0m"
+      # suggest a branch name
+      command="git branch -r | egrep '${prefix}-[A-Z]+[0-9]*\b$'"
+      eval ${command}
+    fi
+    read -p $'\e[91mPlease specify a server branch name: \e[0m' branchServer
+    if [ -n "$branchServer" ]; then
+      datetimestamp
+      echo -e "\e[35m$stamp   \e[33m$branchServer\e[0m" >> ${history_file}
+    fi
+  done
+
+  if [ -z ${branchServer} ]; then
+    echo -e "\e[91mError: A branch name must be provided\e[0m"
+  else
+    defaultDeploy="${default_prod_server}/${default_truth}"
+    read -p "deployment server branch name [${defaultDeploy}]: " deployServer
+    deployServer=${deployServer:-$defaultDeploy}
+
+    script_comment "Switching to $branchServer"
+    git checkout ${branchServer}
+    script_comment "Merging $branchCode to $branchServer"
+    git merge ${branchCode}
+    script_comment "Pushing ${default_truth} to $branchServer"
+    git push origin ${default_truth}:${default_truth}
+    script_comment "Switching to $deployServer"
+    git checkout ${deployServer}
+    script_comment "Merging $branchCode to $deployServer"
+    git merge ${branchCode}
+    script_comment "Pushing ${default_truth} to $deployServer"
+    git push ${default_prod_server} ${default_truth}:${default_truth}
+    script_comment "Switching to $branchServer"
+    git checkout ${branchServer}
+  fi
+
+  display_prompt
+}
+
 function git_list {
   cd $gitDir
 
@@ -304,12 +375,12 @@ function git_list {
     rc=$?
 
     if [ $rc -gt 0 ]; then
-      echo -e "\e[91mError [$rc] checking out $branch"
+      echo -e "\e[91mError [$rc] checking out $branch\e[0m"
     else
       git pull --no-rebase -v "origin"
       rc=$?
       if [ $rc -gt 0 ]; then
-        echo -e "\e[91mError [$rc] with pull"
+        echo -e "\e[91mError [$rc] with pull\e[0m"
       fi
     fi
     echo
@@ -329,7 +400,7 @@ function git_list {
   rc=$?
 
   if [ $rc -gt 0 ]; then
-    echo -e "\e[91mError [$rc]; could not list branches"
+    echo -e "\e[91mError [$rc]; could not list branches\e[0m"
   fi
 
   display_prompt
@@ -375,7 +446,7 @@ function git_log {
   git checkout $branch
   rc=$?
   if [ $rc -gt 0 ]; then
-    echo -e "\e[91mError [$rc]; could not checkout $branch"
+    echo -e "\e[91mError [$rc]; could not checkout $branch\e[0m"
   else
     file_cmd=''
     if [ -n "$file" ]; then
@@ -384,7 +455,7 @@ function git_log {
     git log --stat --graph --author=${author} --since="$days_ago" $file_cmd
     rc=$?
     if [ $rc -gt 0 ]; then
-      echo -e "\e[91mError [$rc]; could not get log"
+      echo -e "\e[91mError [$rc]; could not get log\e[0m"
     fi
   fi
 
@@ -392,11 +463,11 @@ function git_log {
 }
 
 function git_merge {
-  cd $gitDir
+  cd ${gitDir}
 
   read -p "code branch name [${default_branch}]: " branchCode
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$branchCode\e[0m" >> $history_file
+  echo -e "\e[35m$stamp   \e[33m$branchCode\e[0m" >> ${history_file}
   branchCode=${branchCode:-$default_branch}
 
   if [ "$branchCode" = "menu" ]; then
@@ -410,17 +481,17 @@ function git_merge {
   read -p "server branch name: " branchServer
   if [ -n "$branchServer" ]; then
     datetimestamp
-    echo -e "\e[35m$stamp   \e[33m$branchServer\e[0m" >> $history_file
+    echo -e "\e[35m$stamp   \e[33m$branchServer\e[0m" >> ${history_file}
   fi
 
   i="0"
-  while [ -z $branchServer ]
+  while [ -z ${branchServer} ]
   do
-    if [ $i -eq 3 ]; then
+    if [ ${i} -eq 3 ]; then
       break
     fi
     i=$[$i+1]
-    if [ $i -eq 1 ] && [ ! -z "$prefix" ]; then
+    if [ ${i} -eq 1 ] && [ ! -z "$prefix" ]; then
       echo -e "\e[93mDid you mean one of these branches?\e[0m"
       # suggest a branch name
       command="git branch -r | egrep '${prefix}-[A-Z]+[0-9]*\b$'"
@@ -429,38 +500,14 @@ function git_merge {
     read -p $'\e[91mPlease specify a server branch name: \e[0m' branchServer
     if [ -n "$branchServer" ]; then
       datetimestamp
-      echo -e "\e[35m$stamp   \e[33m$branchServer\e[0m" >> $history_file
+      echo -e "\e[35m$stamp   \e[33m$branchServer\e[0m" >> ${history_file}
     fi
   done
 
-  if [ -z $branchServer ]; then
-    echo -e "\e[91mA server branch name must be specified"
+  if [ -z ${branchServer} ]; then
+    echo -e "\e[91mA server branch name must be specified\e[0m"
   else
-    git checkout $branchServer
-    rc=$?
-    if [ $rc -gt 0 ]; then
-      echo -e "\e[91mError [$rc]; could not switch to $branchServer"
-    else
-      git merge $branchCode
-      rc=$?
-      if [ $rc -gt 0 ]; then
-        echo -e "\e[91mError [$rc]; aborting branch merge"
-        echo -e "\e[93mPlease fix the conflicts and then push"
-      else
-        git pull --no-rebase -v "origin"
-        rc=$?
-        if [ $rc -gt 0 ]; then
-          echo -e "\e[91mError [$rc]; aborting pull after merge"
-          echo -e "\e[93mPlease fix the issue and then push"
-        else
-          git push "origin" $branchServer:$branchServer
-          rc=$?
-          if [ $rc -gt 0 ]; then
-            echo -e "\e[91mError [$rc]; could not push code with $branchServer"
-          fi
-        fi
-      fi
-    fi
+    func_merge ${branchCode} ${branchServer}
   fi
 
   display_prompt
@@ -492,7 +539,7 @@ function git_pull {
   rc=$?
 
   if [ $rc -gt 0 ]; then
-    echo -e "\e[91mError [$rc] with pull"
+    echo -e "\e[91mError [$rc] with pull\e[0m"
   fi
 
   display_prompt
@@ -501,20 +548,11 @@ function git_pull {
 function git_push {
   cd ${gitDir}
 
-  git pull --no-rebase -v "origin"
-  rc=$?
-  if [ ${rc} -gt 0 ]; then
-    echo -e "\e[91mError [$rc]; aborting pull"
-  else
-    defaultServer='origin'
-    read -p "server [$defaultServer]: " server
-    server=${server:-$defaultServer}
-    git push ${server}
-    rc=$?
-    if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc]; aborting push after pull"
-    fi
-  fi
+  defaultServer='origin'
+  read -p "server [$defaultServer]: " server
+  server=${server:-$defaultServer}
+
+  func_push ${server}
 
   display_prompt
 }
@@ -542,7 +580,7 @@ function git_remote {
     rc=$?
 
     if [ $rc -gt 0 ]; then
-      echo -e "\e[91mError [$rc] making branch $branch remote"
+      echo -e "\e[91mError [$rc] making branch $branch remote\e[0m"
     fi
   fi
 
@@ -595,9 +633,9 @@ function git_reset {
     rc=$?
 
     if [ $rc -gt 0 ]; then
-      echo -e "\e[91mError [$rc] with reset"
+      echo -e "\e[91mError [$rc] with reset\e[0m"
     else
-      echo -e "\e[92mReset the branch"
+      echo -e "\e[92mReset the branch\e[0m"
     fi
   fi
 
@@ -611,18 +649,18 @@ function git_restore {
   rc=$?
 
   if [ $rc -gt 0 ]; then
-    echo -e "\e[91mError [$rc] popping from the stash"
+    echo -e "\e[91mError [$rc] popping from the stash\e[0m"
   fi
 
   display_prompt
 }
 
 function git_revert {
-  cd $gitDir
+  cd ${gitDir}
 
   read -p 'commit to revert: ' commit
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$commit\e[0m" >> $history_file
+  echo -e "\e[35m$stamp   \e[33m$commit\e[0m" >> ${history_file}
 
   if [ "$commit" = "menu" ]; then
     menu_commit
@@ -630,25 +668,15 @@ function git_revert {
   fi
 
   if [ -z "$commit" ]; then
-    echo -e "\e[91mA commit number must be provided"
+    echo -e "\e[91mA commit number must be provided\e[0m"
   else
-    git revert $commit
+    git revert ${commit}
 
     rc=$?
     if [ $rc -gt 0 ]; then
-      echo -e "\e[91mError [$rc] reverting commit $commit"
+      echo -e "\e[91mError [$rc] reverting commit $commit\e[0m"
     else
-      git pull --no-rebase -v "origin"
-      rc=$?
-      if [ $rc -gt 0 ]; then
-        echo -e "\e[91mError [$rc]; aborting pull"
-      else
-        git push
-        rc=$?
-        if [ $rc -gt 0 ]; then
-          echo -e "\e[91mError [$rc]; aborting push after pull"
-        fi
-      fi
+      func_push
     fi
   fi
 
@@ -662,7 +690,7 @@ function git_save {
   rc=$?
 
   if [ $rc -gt 0 ]; then
-    echo -e "\e[91mError [$rc] saving to the stash"
+    echo -e "\e[91mError [$rc] saving to the stash\e[0m"
   fi
 
   display_prompt
@@ -677,11 +705,11 @@ function git_status {
 }
 
 function git_switch {
-  cd $gitDir
+  cd ${gitDir}
 
   read -p "branch name [${default_branch}]: " branch
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> $history_file
+  echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> ${history_file}
   branch=${branch:-$default_branch}
 
   if [ "$branch" = "menu" ]; then
@@ -692,18 +720,7 @@ function git_switch {
     branch=${branch:-$default_branch}
   fi
 
-  git checkout $branch
-  rc=$?
-
-  if [ $rc -gt 0 ]; then
-    echo -e "\e[91mError [$rc] checking out $branch"
-  else
-    git pull --no-rebase -v "origin"
-    rc=$?
-    if [ $rc -gt 0 ]; then
-      echo -e "\e[91mError [$rc] with pull"
-    fi
-  fi
+  func_switch ${branch}
 
   display_prompt
 }
@@ -715,12 +732,73 @@ function git_undo {
   rc=$?
 
   if [ $rc -gt 0 ]; then
-    echo -e "\e[91mError [$rc] with reset"
+    echo -e "\e[91mError [$rc] with reset\e[0m"
   else
-    echo -e "\e[92mRemoved the commit"
+    echo -e "\e[92mRemoved the commit\e[0m"
   fi
 
   display_prompt
+}
+
+function func_merge {
+  script_comment "func_merge($1, $2)"
+  branchCode="$1"
+  branchServer="$2"
+
+  git checkout ${branchServer}
+  rc=$?
+  if [ $rc -gt 0 ]; then
+    echo -e "\e[91mError [$rc]; could not switch to $branchServer\e[0m"
+  else
+    git merge ${branchCode}
+    rc=$?
+    if [ $rc -gt 0 ]; then
+      echo -e "\e[91mError [$rc]; aborting branch merge\e[0m"
+      echo -e "\e[93mPlease fix the conflicts and then push\e[0m"
+    else
+      func_push "origin $branchServer:$branchServer"
+    fi
+  fi
+}
+
+function func_push {
+  script_comment "func_push($1)"
+  if [ -z "$1" ]; then
+    server=''
+  else
+    server="$1"
+  fi
+
+  git pull --no-rebase -v "origin"
+  rc=$?
+  if [ ${rc} -gt 0 ]; then
+    echo -e "\e[91mError [$rc]; aborting pull\e[0m"
+    echo -e "\e[93mPlease fix the issue and then push\e[0m"
+  else
+    git push ${server}
+    rc=$?
+    if [ ${rc} -gt 0 ]; then
+      echo -e "\e[91mError [$rc]; aborting push after pull\e[0m"
+    fi
+  fi
+}
+
+function func_switch {
+  script_comment "func_switch($1)"
+  branch="$1"
+
+  git checkout ${branch}
+  rc=$?
+
+  if [ ${rc} -gt 0 ]; then
+    echo -e "\e[91mError [$rc] checking out $branch\e[0m"
+  else
+    git pull --no-rebase -v "origin"
+    rc=$?
+    if [ ${rc} -gt 0 ]; then
+      echo -e "\e[91mError [$rc] with pull\e[0m"
+    fi
+  fi
 }
 
 function menu_adjust_branch () {
@@ -849,6 +927,10 @@ function menu_display () {
   fi
 }
 
+function script_comment {
+  echo -e "\e[100m${1}\e[0m"
+}
+
 # TODO: save $gitDir to ~/.bashrc
 function script_dir {
   read -e -p "Please specify the git directory[${gitDir}]: " gitDir
@@ -869,6 +951,8 @@ function script_dir {
   if [ "$inGit" != 'true' ]; then
     echo -e "\e[91mCurrent git directory [${gitDir}] is not a valid working tree\e[0m"
     gitDir="$originalGitDir"
+  else
+    history_file="$PWD/.mtsgit_history"
   fi
 
   display_prompt
@@ -959,6 +1043,7 @@ function script_variables {
   echo -e "default_branch: \e[32m$default_branch\e[0m"
   echo -e "default_truth: \e[96m$default_truth\e[0m"
   echo -e "current_branch: \e[36m$current_branch\e[0m"
+  echo -e "default_prod_server: $default_prod_server\e[0m"
   echo -e "prefix: \e[35m$prefix\e[0m"
   echo -e "history_file: $history_file\e[0m"
   echo -e "version: \e[94m$version\e[0m"
@@ -985,7 +1070,7 @@ prompt='MTSgit'
 default_branch=''
 current_branch=''
 prefix=''
-version='1.33'
+version='1.34'
 stamp=''
 inGit=''
 originalGitDir="$gitDir"
@@ -1025,6 +1110,7 @@ echo '                    by Mike Rodarte'
 echo
 echo 'Type help for a list of available commands.'
 echo 'Press <Enter> to execute the command.'
+echo 'To set up for a non-default repository, execute dir and truth.'
 echo
 
 script_set_current
