@@ -36,6 +36,7 @@ function display_prompt {
     current) git_current;;
     delete) git_delete;;
     deploy) git_deploy;;
+    exec) git_exec;;
     list) git_list;;
     log) git_log;;
     merge) git_merge;;
@@ -71,6 +72,7 @@ function show_commands {
   echo 'current             Display the current branch'
   echo 'delete              Delete a branch*'
   echo 'deploy              Merge and push a branch to a server'
+  echo 'exec                Make a file executable'
   echo 'list                List branches'
   echo 'log                 Display the Commit History of a branch*'
   echo 'merge               Merge two branches*'
@@ -401,6 +403,20 @@ function git_list {
 
   if [ $rc -gt 0 ]; then
     echo -e "\e[91mError [$rc]; could not list branches\e[0m"
+  fi
+
+  display_prompt
+}
+
+function git_exec {
+  cd ${gitDir}
+
+  read -e -p 'file to make executable: ' file
+
+  if [ -e "$file" ]; then
+    git update-index --chmod=+x $file
+  else
+    echo -e "\e[91mError: file ${file} does not exist\e[0m"
   fi
 
   display_prompt
@@ -1070,7 +1086,7 @@ prompt='MTSgit'
 default_branch=''
 current_branch=''
 prefix=''
-version='1.34'
+version='1.35'
 stamp=''
 inGit=''
 originalGitDir="$gitDir"
