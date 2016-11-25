@@ -36,6 +36,7 @@ function display_prompt {
     current) git_current;;
     delete) git_delete;;
     deploy) git_deploy;;
+    deployment) git_deployment;;
     exec) git_exec;;
     list) git_list;;
     log) git_log;;
@@ -72,6 +73,7 @@ function show_commands {
   echo 'current             Display the current branch'
   echo 'delete              Delete a branch*'
   echo 'deploy              Merge and push a branch to a server'
+  echo 'deployment          Add a remote (deployment) branch to use with deploy'
   echo 'exec                Make a file executable'
   echo 'list                List branches'
   echo 'log                 Display the Commit History of a branch*'
@@ -349,6 +351,33 @@ function git_deploy {
     git push ${default_prod_server} ${default_truth}:${default_truth}
     script_comment "Switching to $branchServer"
     git checkout ${branchServer}
+  fi
+
+  display_prompt
+}
+
+function git_deployment {
+  cd ${gitDir}
+
+  defaultDeploy="${default_prod_server}"
+  read -p "deployment server branch name [${defaultDeploy}]: " deployServer
+  deployServer=${deployServer:-$defaultDeploy}
+
+  read -p "git path (include ssh://user@host:port/path): " gitPath
+  if [ -z "$gitPath" ]; then
+    echo -e "\e[91mError: A git path must be added\e[0m"
+  else
+    git remote add ${deployServer} ${gitPath}
+    rc=$?
+    if [ ${rc} -gt 0 ]; then
+      echo -e "\e[91mError [$rc] adding remote branch\e[0m"
+    else
+      git push ${deployServer} +${default_truth}:refs/heads/${default_truth}
+      rc=$?
+      if [ ${rc} -gt 0 ]; then
+        echo -e "\e[91mError pushing to deployment server\e[0m"
+      fi
+    fi
   fi
 
   display_prompt
@@ -1086,7 +1115,7 @@ prompt='MTSgit'
 default_branch=''
 current_branch=''
 prefix=''
-version='1.35'
+version='1.36'
 stamp=''
 inGit=''
 originalGitDir="$gitDir"
