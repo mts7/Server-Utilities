@@ -172,13 +172,13 @@ function git_add {
   done
 
   if [ -z ${files} ]; then
-    echo -e "\e[91mA file name was not specified"
+    echo -e "\e[91mA file name was not specified\e[0m"
   else
     git add ${files}
     rc=$?
 
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc] with add"
+      echo -e "\e[91mError [$rc] with add\e[0m"
     fi
   fi
 
@@ -228,7 +228,7 @@ function git_changes {
   git diff --name-only ${changed} ${truth}
   rc=$?
   if [ ${rc} -gt 0 ]; then
-    echo -e "\e[91mError [$rc] with diff"
+    echo -e "\e[91mError [$rc] with diff\e[0m"
   fi
 
   display_prompt
@@ -273,13 +273,13 @@ function git_commit {
   done
 
   if [ -z ${message} ]; then
-    echo -e "\e[91mPlease commit with a message"
+    echo -e "\e[91mPlease commit with a message\e[0m"
   else
     git commit -a -m "$message"
     rc=$?
 
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc] with commit"
+      echo -e "\e[91mError [$rc] with commit\e[0m"
     fi
   fi
 
@@ -319,12 +319,12 @@ function git_create {
   git checkout ${default_truth}
   rc=$?
   if [ ${rc} -gt 0 ]; then
-    echo -e "\e[91mError [$rc] with checking out $default_truth"
+    echo -e "\e[91mError [$rc] with checking out $default_truth\e[0m"
   else
     func_pull
     rc=${pull_result}
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc]; aborting branch create."
+      echo -e "\e[91mError [$rc]; aborting branch create.\e[0m"
     else
       if [ "y" = "${remote}" ]; then
         git checkout --track ${default_remote}/${branch}
@@ -333,9 +333,9 @@ function git_create {
       fi
       rc=$?
       if [ ${rc} -gt 0 ]; then
-        echo -e "\e[91mError [$rc]; failed to create branch"
+        echo -e "\e[91mError [$rc]; failed to create branch\e[0m"
       else
-        echo -e "\e[92mCreated $branch"
+        echo -e "\e[92mCreated $branch\e[0m"
       fi
     fi
   fi
@@ -356,7 +356,7 @@ function git_current {
   cd ${git_dir}
 
   set_current
-  echo -e "\e[36m$current_branch"
+  echo -e "\e[36m$current_branch\e[0m"
 
   display_prompt
 }
@@ -407,7 +407,7 @@ function git_delete {
       to_delete=0
     else
       to_delete=0
-      echo -e "\e[91mUnknown answer $answer"
+      echo -e "\e[91mUnknown answer $answer\e[0m"
     fi
   fi
 
@@ -415,10 +415,10 @@ function git_delete {
     git branch -D ${branch}
     rc=$?
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc]; could not delete branch $branch"
+      echo -e "\e[91mError [$rc]; could not delete branch $branch\e[0m"
     fi
   else
-    echo -e "\e[93mSkipping deletion of $branch"
+    echo -e "\e[93mSkipping deletion of $branch\e[0m"
   fi
 
   display_prompt
@@ -983,7 +983,7 @@ function git_reset {
     rc=$?
 
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc] checking out $branch"
+      echo -e "\e[91mError [$rc] checking out $branch\e[0m"
       echo "using $current_branch instead of $branch"
       branch="$current_branch"
     fi
@@ -1541,28 +1541,28 @@ function menu_display () {
 
   # validate arguments
   if [ -z "$1" ]; then
-    echo -e "\e[91mmenu_display was called without a command parameter"
+    echo -e "\e[91mmenu_display was called without a command parameter\e[0m"
     return 1
   else
     command="$1"
   fi
 
   if [ -z "$2" ]; then
-    echo -e "\e[91mmenu_display was called without a prompt parameter"
+    echo -e "\e[91mmenu_display was called without a prompt parameter\e[0m"
     return 2
   else
     menu_prompt="$2"
   fi
 
   if [ -z "$3" ]; then
-    echo -e "\e[91mmenu_display was called without a number of items parameter"
+    echo -e "\e[91mmenu_display was called without a number of items parameter\e[0m"
     return 3
   else
     item_numbers="$3"
   fi
 
   if [ -z "$4" ]; then
-    echo -e "\e[91mmenu_display was called without a value manipulation function parameter"
+    echo -e "\e[91mmenu_display was called without a value manipulation function parameter\e[0m"
     return 4
   else
     menu_function="$4"
@@ -1751,7 +1751,7 @@ function script_set {
   read -p "default branch [${current_branch}]: " default_branch
   default_branch=${default_branch:-$current_branch}
 
-  echo -e "\e[92mSet default branch to \e[32m${default_branch}"
+  echo -e "\e[92mSet default branch to \e[32m${default_branch}\e[0m"
 
   script_prefix
 
@@ -1819,9 +1819,9 @@ function script_truth {
     lines=$(eval "git branch | egrep '^\**\s*${truth}$' | wc -l")
     if [ "$lines" = "1" ]; then
       default_truth="$truth"
-      echo -e "\e[92mSet default source of truth to \e[96m${default_truth}"
+      echo -e "\e[92mSet default source of truth to \e[96m${default_truth}\e[0m"
     else
-      echo -e "\e[91mBranch $truth does not exist"
+      echo -e "\e[91mBranch $truth does not exist\e[0m"
     fi
   fi
 
