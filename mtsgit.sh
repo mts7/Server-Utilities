@@ -68,7 +68,9 @@ function display_prompt {
     servers) git_servers;;
     status) git_status;;
     switch) git_switch;;
+    track) git_track;;
     undo) git_undo;;
+    untrack) git_untrack;;
     var) func_var;;
     *) echo -e "\e[91mUnknown command $choice\e[0m";show_commands;;
   esac
@@ -117,7 +119,9 @@ function show_commands {
   echo 'servers             List the remotes'
   echo 'status              List the files changed and need to be added'
   echo 'switch              Switch to a branch*'
+  echo 'track               Switch tracking to new remote branch'
   echo 'undo                Undo a commit'
+  echo 'untrack             Stop tracking a remote branch'
   echo 'var                 Display a variable'
   echo
   echo '* shows commands that accept the menu parameter at some branch prompts'
@@ -299,8 +303,13 @@ function git_commit {
 function git_create {
   cd ${git_dir}
 
+  local remote
   local branch
   local rc
+
+  read -p 'from remote? [y|n] ' remote
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m${remote}\e[0m" >> ${history_file}
 
   read -p "new branch name [${default_branch}]: " branch
   datetimestamp
@@ -317,7 +326,11 @@ function git_create {
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc]; aborting branch create."
     else
-      git checkout -b ${branch}
+      if [ "y" = "${remote}" ]; then
+        git checkout --track ${default_remote}/${branch}
+      else
+        git checkout -b ${branch}
+      fi
       rc=$?
       if [ ${rc} -gt 0 ]; then
         echo -e "\e[91mError [$rc]; failed to create branch"
@@ -1192,6 +1205,49 @@ function git_switch {
 }
 
 #######################################
+# Switch tracking of local branch to
+#   different remote branch
+# Globals:
+#   git_dir
+#   default_branch
+#   menu_value
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+function git_track {
+  cd ${git_dir}
+
+  local server
+  local branch
+
+  read -p "remote [$default_remote]: " server
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$server\e[0m" >> ${history_file}
+  server=${server:-$default_remote}
+
+  read -p "branch name [${default_branch}]: " branch
+  datetimestamp
+  echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> ${history_file}
+  branch=${branch:-$default_branch}
+
+  if [ "$branch" = "menu" ]; then
+    menu_branch
+    branch="$menu_value"
+
+    # use the found branch or the default branch (if no branch was found)
+    branch=${branch:-$default_branch}
+  fi
+
+  func_switch ${branch}
+
+  git branch -u ${server}/${branch}
+
+  display_prompt
+}
+
+#######################################
 # Soft reset the branch
 # Globals:
 #   git_dir
@@ -1213,6 +1269,23 @@ function git_undo {
   else
     echo -e "\e[92mRemoved the commit\e[0m"
   fi
+
+  display_prompt
+}
+
+#######################################
+# Remove remote tracking of a branch
+# Globals:
+#   git_dir
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+function git_untrack {
+  cd ${git_dir}
+
+  git branch --unset-upstream
 
   display_prompt
 }
@@ -1841,7 +1914,7 @@ prefix=''
 prompt='MTSgit'
 pull_result=99
 stamp=''
-version='1.38'
+version='1.39'
 
 # check for directory existence
 if [ ! -d "$git_dir" ]; then
