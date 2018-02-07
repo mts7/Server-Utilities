@@ -1321,7 +1321,9 @@ function func_merge {
       echo -e "\e[91mError [$rc]; aborting branch merge\e[0m"
       echo -e "\e[93mPlease fix the conflicts and then push\e[0m"
     else
-      func_push "${default_remote} $branch_server:$branch_server"
+      if [ "${is_remote}" -eq 1 ]; then
+        func_push "${default_remote} $branch_server:$branch_server"
+      fi
     fi
   fi
 }
@@ -1893,15 +1895,29 @@ function set_current {
   current_branch=$(git rev-parse --abbrev-ref HEAD)
 
   local local_result
+  local local_response
   local remote_result
+  local remote_response
 
   local_result=$(git show-ref --quiet --verify -- "refs/heads/${current_branch}" || echo "false")
+  local_response=$?
   remote_result=$(git show-ref --quiet --verify -- "refs/remotes/${default_remote}/${current_branch}" || echo "false")
+  remote_response=$?
   if [ "${local_result}" != 'false' ]; then
-    is_local=1
+    # verify the result isn't an error
+    if [ ${local_response} -gt 0 ]; then
+      echo -e "\e[91mA fatal error ${local_response} occurred when verifying if the local branch existed\e[0m"
+    else
+      is_local=1
+    fi
   fi
   if [ "${remote_result}" != 'false' ]; then
-    is_remote=1
+    # verify the result isn't an error
+    if [ ${remote_response} -gt 0 ]; then
+      echo -e "\e[91mA fatal error ${remote_response} occurred when verifying if the remote branch existed\e[0m"
+    else
+      is_remote=1
+    fi
   fi
 
 }
@@ -1945,7 +1961,7 @@ prefix=''
 prompt='MTSgit'
 pull_result=99
 stamp=''
-version='1.40'
+version='1.41'
 
 # check for directory existence
 if [ ! -d "$git_dir" ]; then
