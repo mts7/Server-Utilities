@@ -259,7 +259,7 @@ function git_commit {
   fi
 
   i="0"
-  while [ -z ${message} ]
+  while [ -z "${message}" ]
   do
     if [ ${i} -eq 3 ]; then
       break
@@ -272,7 +272,7 @@ function git_commit {
     fi
   done
 
-  if [ -z ${message} ]; then
+  if [ -z "${message}" ]; then
     echo -e "\e[91mPlease commit with a message\e[0m"
   else
     git commit -a -m "$message"
@@ -479,7 +479,7 @@ function git_deploy {
       break
     fi
     i=$[$i+1]
-    if [ ${i} -eq 1 ] && [ ! -z "$prefix" ]; then
+    if [ ${i} -eq 1 ] && [ ! -z "${prefix}" ]; then
       echo -e "\e[93mDid you mean one of these branches?\e[0m"
       # suggest a branch name
       command="git branch -r | egrep '${prefix}-[A-Z]+[0-9]*\b$'"
@@ -1310,7 +1310,7 @@ function func_merge {
   branch_code="$1"
   branch_server="$2"
 
-  git checkout ${branch_server}
+  func_switch ${branch_server}
   rc=$?
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc]; could not switch to $branch_server\e[0m"
@@ -1331,6 +1331,8 @@ function func_merge {
 # Globals:
 #   git_dir
 #   default_remote
+#   is_remote
+#   current_branch
 #   pull_result
 # Arguments:
 #   None
@@ -1342,13 +1344,18 @@ function func_pull {
 
   local rc
 
-  git pull --no-rebase -v ${default_remote}
-  rc=$?
+  if [ ${is_remote} -eq 1 ]; then
+    git pull --no-rebase -v ${default_remote} ${current_branch}
+    rc=$?
 
-  if [ ${rc} -gt 0 ]; then
-    echo -e "\e[91mError [$rc] with pull\e[0m"
+    if [ ${rc} -gt 0 ]; then
+      echo -e "\e[91mError [$rc] with pull\e[0m"
+    fi
+    pull_result=${rc}
+  else
+    # be sure to let the caller know this was successful
+    pull_result=0
   fi
-  pull_result=${rc}
 }
 
 #######################################
@@ -1407,6 +1414,7 @@ function func_switch {
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc] checking out $branch\e[0m"
   else
+    set_current
     func_pull
   fi
 }
@@ -1838,6 +1846,8 @@ function script_truth {
 #   current_branch
 #   default_prod_server
 #   default_remote
+#   is_local
+#   is_remote
 #   prefix
 #   history_file
 #   version
@@ -1856,6 +1866,8 @@ function script_variables {
   echo -e "current_branch: \e[36m$current_branch\e[0m"
   echo -e "default_prod_server: $default_prod_server\e[0m"
   echo -e "default_remote: $default_remote\e[0m"
+  echo -e "is_local: ${is_local}\e[0m"
+  echo -e "is_remote: ${is_remote}\e[0m"
   echo -e "prefix: \e[35m$prefix\e[0m"
   echo -e "history_file: $history_file\e[0m"
   echo -e "version: \e[94m$version\e[0m"
@@ -1865,9 +1877,13 @@ function script_variables {
 
 #######################################
 # Set the current branch to the working
-#   directory head
+#   directory head and set is_local and
+#   is_remote variables
 # Globals:
 #   current_branch
+#   default_remote
+#   is_local
+#   is_remote
 # Arguments:
 #   None
 # Returns:
@@ -1875,6 +1891,19 @@ function script_variables {
 #######################################
 function set_current {
   current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+  local local_result
+  local remote_result
+
+  local_result=$(git show-ref --quiet --verify -- "refs/heads/${current_branch}" || echo "false")
+  remote_result=$(git show-ref --quiet --verify -- "refs/remotes/${default_remote}/${current_branch}" || echo "false")
+  if [ "${local_result}" != 'false' ]; then
+    is_local=1
+  fi
+  if [ "${remote_result}" != 'false' ]; then
+    is_remote=1
+  fi
+
 }
 
 #######################################
@@ -1909,12 +1938,14 @@ function quit {
 current_branch=''
 default_branch=''
 in_git=''
+is_local=0
+is_remote=0
 original_git_dir="$git_dir"
 prefix=''
 prompt='MTSgit'
 pull_result=99
 stamp=''
-version='1.39'
+version='1.40'
 
 # check for directory existence
 if [ ! -d "$git_dir" ]; then
