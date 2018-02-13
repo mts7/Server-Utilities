@@ -134,7 +134,7 @@ Type `truth` to set the default source of truth (like master).
 
 For simpler startup, create a user variable called `$git_dir` in your `.bashrc` file that is set to that directory.
 Update the script to use your default source of truth branch (like master) if you want to use something other than what is provided.
-![mtsgit variables](https://ilj.co/images/mtsgit-help-1.42.png)
+![mtsgit variables](https://ilj.co/images/mtsgit-variables-1.42.png)
 
 
 Type `help` to see a list of commands available.
