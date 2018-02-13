@@ -13,6 +13,8 @@ remove-duplicates
 
 monitor.sh
 
+mtsgit.sh
+
 ---
 
 server-check
@@ -108,3 +110,31 @@ Created: 2015-01-15
 Usage
 ------------------
 Edit the configuration variables at the top of the file, then add the file to crontab.
+
+---
+
+mtsgit.sh
+===============
+This script is an on-going script with a prompt so that the actual shell is not directly used.
+Simplify git commands to one-word statements like pull and push instead of the longer versions.
+Combine commands like git pull before doing git push into a single command of push.
+Use the help menu to see all available options with descriptions of how they work.
+
+Author: Mike Rodarte
+
+Created: 2016-07-11
+
+Usage
+------------------
+Run mtsgit.sh
+
+Type `dir` to set the git directory for the repository.
+
+Type `truth` to set the default source of truth (like master).
+
+For simpler startup, create a user variable called `$git_dir` in your `.bashrc` file that is set to that directory.
+Update the script to use your default source of truth branch (like master) if you want to use something other than what is provided.
+
+Type `help` to see a list of commands available.
+Some commands accept the string `menu` to list either branches or commits. 
+Those will be noted with `*` in the help menu.
