@@ -316,27 +316,21 @@ function git_create {
   echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> ${history_file}
   branch=${branch:-$default_branch}
 
-  git checkout ${default_truth}
-  rc=$?
+  func_switch ${default_truth}
+  rc=${pull_result}
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc] with checking out $default_truth\e[0m"
   else
-    func_pull
-    rc=${pull_result}
-    if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc]; aborting branch create.\e[0m"
+    if [ "y" = "${remote}" ]; then
+      git checkout --track ${default_remote}/${branch}
     else
-      if [ "y" = "${remote}" ]; then
-        git checkout --track ${default_remote}/${branch}
-      else
-        git checkout -b ${branch}
-      fi
-      rc=$?
-      if [ ${rc} -gt 0 ]; then
-        echo -e "\e[91mError [$rc]; failed to create branch\e[0m"
-      else
-        echo -e "\e[92mCreated $branch\e[0m"
-      fi
+      git checkout -b ${branch}
+    fi
+    rc=$?
+    if [ ${rc} -gt 0 ]; then
+      echo -e "\e[91mError [$rc]; failed to create branch\e[0m"
+    else
+      echo -e "\e[92mCreated $branch\e[0m"
     fi
   fi
 
@@ -1310,19 +1304,25 @@ function func_merge {
   branch_code="$1"
   branch_server="$2"
 
-  func_switch ${branch_server}
+  func_switch ${default_truth}
   rc=$?
   if [ ${rc} -gt 0 ]; then
-    echo -e "\e[91mError [$rc]; could not switch to $branch_server\e[0m"
+    echo -e "\e[91mError [${rc}]; could not switch to ${default_truth}\e[0m";
   else
-    git merge ${branch_code}
+    func_switch ${branch_server}
     rc=$?
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc]; aborting branch merge\e[0m"
-      echo -e "\e[93mPlease fix the conflicts and then push\e[0m"
+      echo -e "\e[91mError [${rc}]; could not switch to ${branch_server}\e[0m"
     else
-      if [ "${is_remote}" -eq 1 ]; then
-        func_push "${default_remote} $branch_server:$branch_server"
+      git merge ${branch_code}
+      rc=$?
+      if [ ${rc} -gt 0 ]; then
+        echo -e "\e[91mError [$rc]; aborting branch merge\e[0m"
+        echo -e "\e[93mPlease fix the conflicts and then push\e[0m"
+      else
+        if [ "${is_remote}" -eq 1 ]; then
+          func_push "${default_remote} ${branch_server}:${branch_server}"
+        fi
       fi
     fi
   fi
@@ -1346,8 +1346,10 @@ function func_pull {
 
   local rc
 
+  set_current
+
   if [ ${is_remote} -eq 1 ]; then
-    git pull --no-rebase -v ${default_remote} ${current_branch}
+    git pull --no-rebase -v ${default_remote}
     rc=$?
 
     if [ ${rc} -gt 0 ]; then
@@ -1416,7 +1418,6 @@ function func_switch {
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc] checking out $branch\e[0m"
   else
-    set_current
     func_pull
   fi
 }
@@ -1894,6 +1895,10 @@ function script_variables {
 function set_current {
   current_branch=$(git rev-parse --abbrev-ref HEAD)
 
+  # reset the global variables
+  is_local=0
+  is_remote=0
+
   local local_result
   local local_response
   local remote_result
@@ -1961,7 +1966,7 @@ prefix=''
 prompt='MTSgit'
 pull_result=99
 stamp=''
-version='1.41'
+version='1.42'
 
 # check for directory existence
 if [ ! -d "$git_dir" ]; then
