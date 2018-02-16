@@ -1349,7 +1349,7 @@ function func_pull {
   set_current
 
   if [ ${is_remote} -eq 1 ]; then
-    git pull --no-rebase -v ${default_remote}
+    git pull #--no-rebase -v ${default_remote}
     rc=$?
 
     if [ ${rc} -gt 0 ]; then
@@ -1966,7 +1966,7 @@ prefix=''
 prompt='MTSgit'
 pull_result=99
 stamp=''
-version='1.42'
+version='1.42.1'
 
 # check for directory existence
 if [ ! -d "$git_dir" ]; then
