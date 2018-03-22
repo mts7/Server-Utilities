@@ -145,6 +145,7 @@ function git_add {
 
   local files
   local i
+  local cmd
   local rc
   
   read -e -p 'file name: ' files
@@ -162,7 +163,9 @@ function git_add {
     i=$[$i+1]
     # show result of "git status" to help indicate what should be added
     if [ ${i} -eq 1 ]; then
-      git status -s
+      cmd='git status -s'
+      eval ${cmd}
+      log_git "${cmd}"
     fi
     read -e -p $'\e[91mPlease specify a file name: \e[0m' files
     if [ -n "$files" ]; then
@@ -174,8 +177,10 @@ function git_add {
   if [ -z ${files} ]; then
     echo -e "\e[91mA file name was not specified\e[0m"
   else
-    git add ${files}
+    cmd="git add ${files}"
+    eval ${cmd}
     rc=$?
+    log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc] with add\e[0m"
@@ -205,6 +210,7 @@ function git_changes {
 
   local changed
   local truth
+  local cmd
   local rc
 
   read -p "branch or commit name [${default_branch}]: " changed
@@ -225,8 +231,11 @@ function git_changes {
   echo -e "\e[35m$stamp   \e[33m$truth\e[0m" >> ${history_file}
   truth=${truth:-$default_truth}
 
-  git diff --name-only ${changed} ${truth}
+  cmd="git diff --name-only ${changed} ${truth}"
+  eval ${cmd}
   rc=$?
+  log_git "${cmd}"
+
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc] with diff\e[0m"
   fi
@@ -250,6 +259,7 @@ function git_commit {
 
   local message
   local i
+  local cmd
   local rc
 
   read -p "message: " message
@@ -275,8 +285,10 @@ function git_commit {
   if [ -z "${message}" ]; then
     echo -e "\e[91mPlease commit with a message\e[0m"
   else
-    git commit -a -m "$message"
+    cmd="git commit -a -m \"$message\""
+    eval ${cmd}
     rc=$?
+    log_git "{$cmd}"
 
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc] with commit\e[0m"
@@ -305,6 +317,7 @@ function git_create {
 
   local remote
   local branch
+  local cmd
   local rc
 
   read -p 'from remote? [y|n] ' remote
@@ -322,11 +335,14 @@ function git_create {
     echo -e "\e[91mError [$rc] with checking out $default_truth\e[0m"
   else
     if [ "y" = "${remote}" ]; then
-      git checkout --track ${default_remote}/${branch}
+      cmd="git checkout --track ${default_remote}/${branch}"
     else
-      git checkout -b ${branch}
+      cmd="git checkout -b ${branch}"
     fi
+    eval ${cmd}
     rc=$?
+    log_git "${cmd}"
+
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc]; failed to create branch\e[0m"
     else
@@ -374,9 +390,12 @@ function git_delete {
   local branch
   local to_delete
   local answer
+  local cmd
   local rc
 
-  git checkout ${default_truth}
+  cmd="git checkout ${default_truth}"
+  eval ${cmd}
+  log_git "${cmd}"
 
   read -p "branch name [${default_branch}]: " branch
   datetimestamp
@@ -406,8 +425,11 @@ function git_delete {
   fi
 
   if [ ${to_delete} -eq 1 ]; then
-    git branch -D ${branch}
+    cmd="git branch -D ${branch}"
+    eval ${cmd}
     rc=$?
+    log_git "${cmd}"
+
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc]; could not delete branch $branch\e[0m"
     fi
@@ -444,6 +466,7 @@ function git_deploy {
   local branch_server
   local i
   local command
+  local cmd
   local default_deploy
   local deploy_server
 
@@ -478,6 +501,7 @@ function git_deploy {
       # suggest a branch name
       command="git branch -r | egrep '${prefix}-[A-Z]+[0-9]*\b$'"
       eval ${command}
+      log_git "${command}"
     fi
     read -p $'\e[91mPlease specify a server branch name: \e[0m' branch_server
     if [ -n "$branch_server" ]; then
@@ -494,19 +518,33 @@ function git_deploy {
     deploy_server=${deploy_server:-$default_deploy}
 
     script_comment "Switching to $branch_server"
-    git checkout ${branch_server}
+    cmd="git checkout ${branch_server}"
+    eval ${cmd}
+    log_git "${cmd}"
     script_comment "Merging $branch_code to $branch_server"
-    git merge ${branch_code}
+    cmd="git merge ${branch_code}"
+    eval ${cmd}
+    log_git "${cmd}"
     script_comment "Pushing ${default_truth} to $branch_server"
-    git push ${default_remote} ${default_truth}:${default_truth}
+    cmd="git push ${default_remote} ${default_truth}:${default_truth}"
+    eval ${cmd}
+    log_git "${cmd}"
     script_comment "Switching to $deploy_server"
-    git checkout ${deploy_server}
+    cmd="git checkout ${deploy_server}"
+    eval ${cmd}
+    log_git "${cmd}"
     script_comment "Merging $branch_code to $deploy_server"
-    git merge ${branch_code}
+    cmd="git merge ${branch_code}"
+    eval ${cmd}
+    log_git "${cmd}"
     script_comment "Pushing ${default_truth} to $deploy_server"
-    git push ${default_prod_server} ${default_truth}:${default_truth}
+    cmd="git push ${default_prod_server} ${default_truth}:${default_truth}"
+    eval ${cmd}
+    log_git "${cmd}"
     script_comment "Switching to $branch_server"
-    git checkout ${branch_server}
+    cmd="git checkout ${branch_server}"
+    eval ${cmd}
+    log_git "${cmd}"
   fi
 
   display_prompt
@@ -532,6 +570,7 @@ function git_deployment {
   local default_deploy
   local deploy_server
   local git_path
+  local cmd
   local rc
 
   default_deploy="${default_prod_server}"
@@ -546,13 +585,19 @@ function git_deployment {
   if [ -z "$git_path" ]; then
     echo -e "\e[91mError: A git path must be added\e[0m"
   else
-    git remote add ${deploy_server} ${git_path}
+    cmd="git remote add ${deploy_server} ${git_path}"
+    eval ${cmd}
     rc=$?
+    log_git "${cmd}"
+
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc] adding remote branch\e[0m"
     else
-      git push ${deploy_server} +${default_truth}:refs/heads/${default_truth}
+      cmd="git push ${deploy_server} +${default_truth}:refs/heads/${default_truth}"
+      eval ${cmd}
       rc=$?
+      log_git "${cmd}"
+
       if [ ${rc} -gt 0 ]; then
         echo -e "\e[91mError pushing to deployment server\e[0m"
       fi
@@ -577,13 +622,16 @@ function git_exec {
   cd ${git_dir}
 
   local file
+  local cmd
 
   read -e -p 'file to make executable: ' file
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$file\e[0m" >> ${history_file}
 
   if [ -e "$file" ]; then
-    git update-index --chmod=+x ${file}
+    cmd="git update-index --chmod=+x ${file}"
+    eval ${cmd}
+    log_git "${cmd}"
   else
     echo -e "\e[91mError: file ${file} does not exist\e[0m"
   fi
@@ -609,6 +657,7 @@ function git_list {
   local remote
   local command
   local filter
+  local cmd
   local rc
 
   read -p 'remote [y/n]: ' remote
@@ -627,8 +676,10 @@ function git_list {
     # check for new branches that were pushed since the last pull
     echo -e "\e[36mChecking for remote branches...\e[0m"
     echo
-    git checkout ${default_truth}
+    cmd="git checkout ${default_truth}"
+    eval ${cmd}
     rc=$?
+    log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc] checking out $default_truth\e[0m"
@@ -650,6 +701,7 @@ function git_list {
 
   eval ${command}
   rc=$?
+  log_git "{$command}"
 
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc]; could not list branches\e[0m"
@@ -682,6 +734,7 @@ function git_log {
   local days
   local days_ago
   local file_cmd
+  local cmd
   local rc
 
   read -p "branch name [${default_branch}]: " branch
@@ -718,8 +771,11 @@ function git_log {
   fi
   days_ago=$(date --date="$days days ago" +"%Y"-"%m"-"%d")
 
-  git checkout ${branch}
+  cmd="git checkout ${branch}"
+  eval ${cmd}
   rc=$?
+  log_git "${cmd}"
+
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc]; could not checkout $branch\e[0m"
   else
@@ -727,8 +783,11 @@ function git_log {
     if [ -n "$file" ]; then
       file_cmd=" --follow -p $file"
     fi
-    git log --stat --graph --author=${author} --since="$days_ago" ${file_cmd}
+    cmd="git log --stat --graph --author=${author} --since=\"$days_ago\" ${file_cmd}"
+    eval ${cmd}
     rc=$?
+    log_git "${cmd}"
+
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc]; could not get log\e[0m"
     fi
@@ -790,6 +849,7 @@ function git_merge {
       # suggest a branch name
       command="git branch -r | egrep '${prefix}-[A-Z]+[0-9]*\b$'"
       eval ${command}
+      log_git "${command}"
     fi
     read -p $'\e[91mPlease specify a server branch name: \e[0m' branch_server
     if [ -n "$branch_server" ]; then
@@ -823,6 +883,7 @@ function git_message {
   cd ${git_dir}
 
   local message
+  local cmd
   local rc
 
   read -p 'new commit message: ' message
@@ -830,9 +891,11 @@ function git_message {
   echo -e "\e[35m$stamp   \e[33m$message\e[0m" >> ${history_file}
 
   if [ -n "$message" ]; then
-    git commit --amend -m "$message"
-
+    cmd="git commit --amend -m \"$message\""
+    eval ${cmd}
     rc=$?
+    log_git "${cmd}"
+
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError amending the commit message\e[0m"
     fi
@@ -905,6 +968,7 @@ function git_remote {
   local default_server
   local server
   local branch
+  local cmd
   local rc
 
   default_server=${default_remote}
@@ -927,8 +991,10 @@ function git_remote {
   if [ -z ${branch} ]; then
     echo -e "\e[91Please enter a branch name\e[0m"
   else
-    git push -u ${default_server} ${branch}
+    cmd="git push -u ${default_server} ${branch}"
+    eval ${cmd}
     rc=$?
+    log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc] making branch $branch remote\e[0m"
@@ -955,6 +1021,7 @@ function git_reset {
   cd ${git_dir}
 
   local branch
+  local cmd
   local rc
   local commit
   local answer
@@ -973,8 +1040,10 @@ function git_reset {
   fi
 
   if [ "$branch" != "$current_branch" ]; then
-    git checkout ${branch}
+    cmd="git checkout ${branch}"
+    eval ${cmd}
     rc=$?
+    log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc] checking out $branch\e[0m"
@@ -998,8 +1067,10 @@ function git_reset {
   echo -e "\e[35m$stamp   \e[33m$answer\e[0m" >> ${history_file}
 
   if [ "$answer" = 'y' ]; then
-    git reset --hard ${commit}
+    cmd="git reset --hard ${commit}"
+    eval ${cmd}
     rc=$?
+    log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc] with reset\e[0m"
@@ -1023,10 +1094,13 @@ function git_reset {
 function git_restore {
   cd ${git_dir}
 
+  local cmd
   local rc
 
-  git stash pop
+  cmd='git stash pop'
+  eval ${cmd}
   rc=$?
+  log_git "${cmd}"
 
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc] popping from the stash\e[0m"
@@ -1051,6 +1125,7 @@ function git_revert {
   cd ${git_dir}
 
   local commit
+  local cmd
   local rc
 
   read -p 'commit to revert: ' commit
@@ -1065,9 +1140,11 @@ function git_revert {
   if [ -z "$commit" ]; then
     echo -e "\e[91mA commit number must be provided\e[0m"
   else
-    git revert ${commit}
-
+    cmd="git revert ${commit}"
+    eval ${cmd}
     rc=$?
+    log_git "${cmd}"
+
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc] reverting commit $commit\e[0m"
     else
@@ -1090,10 +1167,13 @@ function git_revert {
 function git_save {
   cd ${git_dir}
 
+  local cmd
   local rc
 
-  git stash save
+  cmd='git stash save'
+  eval "${cmd}"
   rc=$?
+  log_git "${cmd}"
 
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc] saving to the stash\e[0m"
@@ -1140,7 +1220,11 @@ function git_server {
 function git_servers {
   cd ${git_dir}
 
-  git remote -v
+  local cmd
+
+  cmd='git remote -v'
+  eval ${cmd}
+  log_git "${cmd}"
 
   display_prompt
 }
@@ -1157,7 +1241,11 @@ function git_servers {
 function git_status {
   cd ${git_dir}
 
-  git status -s
+  local cmd
+
+  cmd='git status -s'
+  eval ${cmd}
+  log_git "${cmd}"
 
   display_prompt
 }
@@ -1215,6 +1303,7 @@ function git_track {
 
   local server
   local branch
+  local cmd
 
   read -p "remote [$default_remote]: " server
   datetimestamp
@@ -1236,7 +1325,9 @@ function git_track {
 
   func_switch ${branch}
 
-  git branch -u ${server}/${branch}
+  cmd="git branch -u ${server}/${branch}"
+  eval ${cmd}
+  log_git "${cmd}"
 
   display_prompt
 }
@@ -1253,10 +1344,13 @@ function git_track {
 function git_undo {
   cd ${git_dir}
 
+  local cmd
   local rc
 
-  git reset --soft HEAD
+  cmd='git reset --soft HEAD'
+  eval ${cmd}
   rc=$?
+  log_git "${cmd}"
 
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc] with reset\e[0m"
@@ -1279,7 +1373,11 @@ function git_undo {
 function git_untrack {
   cd ${git_dir}
 
-  git branch --unset-upstream
+  local cmd
+
+  cmd='git branch --unset-upstream'
+  eval ${cmd}
+  log_git "${cmd}"
 
   display_prompt
 }
@@ -1298,6 +1396,7 @@ function git_untrack {
 function func_merge {
   local branch_code
   local branch_server
+  local cmd
   local rc
 
   script_comment "func_merge($1, $2)"
@@ -1314,8 +1413,11 @@ function func_merge {
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [${rc}]; could not switch to ${branch_server}\e[0m"
     else
-      git merge ${branch_code}
+      cmd="git merge ${branch_code}"
+      eval ${cmd}
       rc=$?
+      log_git "${cmd}"
+
       if [ ${rc} -gt 0 ]; then
         echo -e "\e[91mError [$rc]; aborting branch merge\e[0m"
         echo -e "\e[93mPlease fix the conflicts and then push\e[0m"
@@ -1344,13 +1446,16 @@ function func_merge {
 function func_pull {
   cd ${git_dir}
 
+  local cmd
   local rc
 
   set_current
 
   if [ ${is_remote} -eq 1 ]; then
-    git pull #--no-rebase -v ${default_remote}
+    cmd='git pull'
+    eval ${cmd}
     rc=$?
+    log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc] with pull\e[0m"
@@ -1373,6 +1478,7 @@ function func_pull {
 #######################################
 function func_push {
   local server
+  local cmd
   local rc
 
   script_comment "func_push($1)"
@@ -1388,8 +1494,11 @@ function func_push {
     echo -e "\e[91mError [$rc]; aborting pull\e[0m"
     echo -e "\e[93mPlease fix the issue and then push\e[0m"
   else
-    git push ${server}
+    cmd="git push ${server}"
+    eval ${cmd}
     rc=$?
+    log_git "${cmd}"
+
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc]; aborting push after pull\e[0m"
     fi
@@ -1407,13 +1516,16 @@ function func_push {
 #######################################
 function func_switch {
   local branch
+  local cmd
   local rc
 
   script_comment "func_switch($1)"
   branch="$1"
 
-  git checkout ${branch}
+  cmd="git checkout ${branch}"
+  eval ${cmd}
   rc=$?
+  log_git "${cmd}"
 
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc] checking out $branch\e[0m"
@@ -1872,6 +1984,7 @@ function script_variables {
   echo -e "is_local: ${is_local}\e[0m"
   echo -e "is_remote: ${is_remote}\e[0m"
   echo -e "prefix: \e[35m$prefix\e[0m"
+  echo -e "git_log_file: $git_log_file\e[0m"
   echo -e "history_file: $history_file\e[0m"
   echo -e "version: \e[94m$version\e[0m"
 
@@ -1941,6 +2054,25 @@ function datetimestamp {
 }
 
 #######################################
+# Log the git command
+# Globals:
+#   None
+# Arguments:
+#   Message
+# Returns:
+#   None
+#######################################
+function log_git() {
+  if [ -z "${1}" ]; then
+    echo -e "\e[91mA message must be provided to log the git command\e[0m"
+  else
+    datetimestamp
+    touch ${git_log_file}
+    echo -e "${1}" >> ${git_log_file}
+  fi
+}
+
+#######################################
 # Clean up files and exit cleanly
 # Globals:
 #   menu_file
@@ -1966,7 +2098,7 @@ prefix=''
 prompt='MTSgit'
 pull_result=99
 stamp=''
-version='1.42.1'
+version='1.43'
 
 # check for directory existence
 if [ ! -d "$git_dir" ]; then
@@ -1990,6 +2122,7 @@ fi
 cd ${git_dir}
 cd ..
 
+git_log_file="$PWD/.mtsgit_gitlog"
 history_file="$PWD/.mtsgit_history"
 menu_temp=''
 menu_file="$PWD/mtstemp_menu"
