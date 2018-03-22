@@ -288,7 +288,7 @@ function git_commit {
     cmd="git commit -a -m \"$message\""
     eval ${cmd}
     rc=$?
-    log_git "{$cmd}"
+    log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc] with commit\e[0m"
