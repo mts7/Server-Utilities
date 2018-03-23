@@ -567,14 +567,12 @@ function git_deploy {
 function git_deployment {
   cd ${git_dir}
 
-  local default_deploy
   local deploy_server
   local git_path
   local cmd
   local rc
 
-  default_deploy="${default_prod_server}"
-  read -p "deployment server branch name [${default_deploy}]: " deploy_server
+  read -p "deployment server branch name [${default_prod_server}]: " deploy_server
   datetimestamp
   echo -e "\e[35m$stamp   \e[33m$deploy_server\e[0m" >> ${history_file}
   deploy_server=${deploy_server:-$default_deploy}
@@ -1984,7 +1982,6 @@ function script_variables {
   echo -e "is_local: ${is_local}\e[0m"
   echo -e "is_remote: ${is_remote}\e[0m"
   echo -e "prefix: \e[35m$prefix\e[0m"
-  echo -e "git_log_file: $git_log_file\e[0m"
   echo -e "history_file: $history_file\e[0m"
   echo -e "version: \e[94m$version\e[0m"
 
@@ -2067,8 +2064,7 @@ function log_git() {
     echo -e "\e[91mA message must be provided to log the git command\e[0m"
   else
     datetimestamp
-    touch ${git_log_file}
-    echo -e "${1}" >> ${git_log_file}
+    echo -e "\e[35m$stamp \e[96m${1}\e[0m" >> ${history_file}
   fi
 }
 
@@ -2122,7 +2118,6 @@ fi
 cd ${git_dir}
 cd ..
 
-git_log_file="$PWD/.mtsgit_gitlog"
 history_file="$PWD/.mtsgit_history"
 menu_temp=''
 menu_file="$PWD/mtstemp_menu"
