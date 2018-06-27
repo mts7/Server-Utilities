@@ -115,7 +115,7 @@ Edit the configuration variables at the top of the file, then add the file to cr
 
 mtsgit.sh
 ===============
-This script is an on-going script with a prompt so that the actual shell is not directly used.
+This script is an on-going, interactive script with a prompt so that the actual shell is not directly used.
 Simplify git commands to one-word statements like pull and push instead of the longer versions.
 Combine commands like git pull before doing git push into a single command of push.
 Use the help menu to see all available options with descriptions of how they work.
