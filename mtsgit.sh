@@ -1533,6 +1533,7 @@ function func_switch {
 
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc] checking out $branch\e[0m"
+    return $rc
   else
     func_pull
   fi
