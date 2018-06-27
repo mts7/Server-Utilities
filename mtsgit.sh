@@ -1405,11 +1405,13 @@ function func_merge {
   rc=$?
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [${rc}]; could not switch to ${default_truth}\e[0m";
+    return ${rc}
   else
     func_switch ${branch_server}
     rc=$?
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [${rc}]; could not switch to ${branch_server}\e[0m"
+      return ${rc}
     else
       cmd="git merge ${branch_code}"
       eval ${cmd}
@@ -1419,6 +1421,7 @@ function func_merge {
       if [ ${rc} -gt 0 ]; then
         echo -e "\e[91mError [$rc]; aborting branch merge\e[0m"
         echo -e "\e[93mPlease fix the conflicts and then push\e[0m"
+        return ${rc}
       else
         if [ "${is_remote}" -eq 1 ]; then
           func_push "${default_remote} ${branch_server}:${branch_server}"
@@ -1459,6 +1462,7 @@ function func_pull {
       echo -e "\e[91mError [$rc] with pull\e[0m"
     fi
     pull_result=${rc}
+    # consider returning ${rc}
   else
     # be sure to let the caller know this was successful
     pull_result=0
@@ -1491,6 +1495,7 @@ function func_push {
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc]; aborting pull\e[0m"
     echo -e "\e[93mPlease fix the issue and then push\e[0m"
+    return ${rc}
   else
     cmd="git push ${server}"
     eval ${cmd}
@@ -1499,6 +1504,7 @@ function func_push {
 
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc]; aborting push after pull\e[0m"
+      return ${rc}
     fi
   fi
 }
@@ -1533,7 +1539,7 @@ function func_switch {
 
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc] checking out $branch\e[0m"
-    return $rc
+    return ${rc}
   else
     func_pull
   fi
