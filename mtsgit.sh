@@ -155,7 +155,7 @@ function git_add {
   fi
 
   i="0"
-  while [ -z ${files} ]
+  while [ -z "${files}" ]
   do
     if [ ${i} -eq 3 ]; then
       break
@@ -174,7 +174,7 @@ function git_add {
     fi
   done
 
-  if [ -z ${files} ]; then
+  if [ -z "${files}" ]; then
     echo -e "\e[91mA file name was not specified\e[0m"
   else
     cmd="git add ${files}"
@@ -490,7 +490,7 @@ function git_deploy {
   fi
 
   i="0"
-  while [ -z ${branch_server} ]
+  while [ -z "${branch_server}" ]
   do
     if [ ${i} -eq 3 ]; then
       break
@@ -510,7 +510,7 @@ function git_deploy {
     fi
   done
 
-  if [ -z ${branch_server} ]; then
+  if [ -z "${branch_server}" ]; then
     echo -e "\e[91mError: A branch name must be provided\e[0m"
   else
     default_deploy="${default_prod_server}/${default_truth}"
@@ -693,7 +693,7 @@ function git_list {
     echo -e "\e[33mLocal Branches\e[0m"
   fi
 
-  if [ ! -z ${filter} ]; then
+  if [ ! -z "${filter}" ]; then
     command="$command | grep $filter"
   fi
 
@@ -836,7 +836,7 @@ function git_merge {
   fi
 
   i="0"
-  while [ -z ${branch_server} ]
+  while [ -z "${branch_server}" ]
   do
     if [ ${i} -eq 3 ]; then
       break
@@ -856,7 +856,7 @@ function git_merge {
     fi
   done
 
-  if [ -z ${branch_server} ]; then
+  if [ -z "${branch_server}" ]; then
     echo -e "\e[91mA server branch name must be specified\e[0m"
   else
     func_merge ${branch_code} ${branch_server}
@@ -986,7 +986,7 @@ function git_remote {
     branch=${branch:-$default_branch}
   fi
 
-  if [ -z ${branch} ]; then
+  if [ -z "${branch}" ]; then
     echo -e "\e[91Please enter a branch name\e[0m"
   else
     cmd="git push -u ${default_server} ${branch}"
@@ -1405,13 +1405,11 @@ function func_merge {
   rc=$?
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [${rc}]; could not switch to ${default_truth}\e[0m";
-    return ${rc}
   else
     func_switch ${branch_server}
     rc=$?
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [${rc}]; could not switch to ${branch_server}\e[0m"
-      return ${rc}
     else
       cmd="git merge ${branch_code}"
       eval ${cmd}
@@ -1421,7 +1419,6 @@ function func_merge {
       if [ ${rc} -gt 0 ]; then
         echo -e "\e[91mError [$rc]; aborting branch merge\e[0m"
         echo -e "\e[93mPlease fix the conflicts and then push\e[0m"
-        return ${rc}
       else
         if [ "${is_remote}" -eq 1 ]; then
           func_push "${default_remote} ${branch_server}:${branch_server}"
@@ -1462,7 +1459,6 @@ function func_pull {
       echo -e "\e[91mError [$rc] with pull\e[0m"
     fi
     pull_result=${rc}
-    # consider returning ${rc}
   else
     # be sure to let the caller know this was successful
     pull_result=0
@@ -1495,7 +1491,6 @@ function func_push {
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc]; aborting pull\e[0m"
     echo -e "\e[93mPlease fix the issue and then push\e[0m"
-    return ${rc}
   else
     cmd="git push ${server}"
     eval ${cmd}
@@ -1504,7 +1499,6 @@ function func_push {
 
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [$rc]; aborting push after pull\e[0m"
-      return ${rc}
     fi
   fi
 }
@@ -1539,7 +1533,6 @@ function func_switch {
 
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [$rc] checking out $branch\e[0m"
-    return ${rc}
   else
     func_pull
   fi
@@ -1726,7 +1719,7 @@ function menu_display () {
 
   # give the user 3 chances to enter something valid
   i=0
-  while [ -z ${menu_item} ]; do
+  while [ -z "${menu_item}" ]; do
     if [ ${i} -eq 3 ]; then
       break
     fi
@@ -1738,7 +1731,7 @@ function menu_display () {
     fi
   done
 
-  if [ -z ${menu_item} ]; then
+  if [ -z "${menu_item}" ]; then
     echo -e "\e[91mA ${menu_prompt} menu item number must be specified\e[0m"
   else
     # get the value from the file at the specified line
@@ -1931,7 +1924,7 @@ function script_truth {
   fi
 
   i="0"
-  while [ -z ${truth} ]
+  while [ -z "${truth}" ]
   do
     if [ ${i} -eq 3 ]; then
       break
@@ -1944,7 +1937,7 @@ function script_truth {
     fi
   done
 
-  if [ -z ${truth} ]; then
+  if [ -z "${truth}" ]; then
     echo -e "\e[91mNo branch specified"
   else
     cd ${git_dir}
