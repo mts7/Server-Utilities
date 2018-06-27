@@ -1520,6 +1520,12 @@ function func_switch {
   script_comment "func_switch($1)"
   branch="$1"
 
+  # if the branch is empty, there is nothing to do
+  if [ -z "${branch}" ]; then
+    echo -e "\e[91mA branch name must be specified in order to checkout a branch\e[0m"
+    return 1
+  fi
+
   cmd="git checkout ${branch}"
   eval ${cmd}
   rc=$?
@@ -2094,7 +2100,7 @@ prefix=''
 prompt='MTSgit'
 pull_result=99
 stamp=''
-version='1.43'
+version='1.44'
 
 # check for directory existence
 if [ ! -d "$git_dir" ]; then
