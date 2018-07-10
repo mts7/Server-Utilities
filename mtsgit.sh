@@ -2242,7 +2242,7 @@ prefix=''
 prompt='MTSgit'
 pull_result=99
 stamp=''
-version='1.45.08'
+version='1.45'
 
 set_git_dir
 
