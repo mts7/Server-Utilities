@@ -1393,11 +1393,11 @@ function func_dir {
 
   read -e -p "Please specify the git directory[${use_dir}]: " use_dir
 
-  if [ "${use_dir}" -eq 'menu' ]; then
+  if [ "${use_dir}" = 'menu' ]; then
     menu_directory
   fi
 
-  if [ "${menu_value}" -eq 'Other' ] || [ "${use_dir}" -ne 'menu' ]; then
+  if [ "${menu_value}" = 'Other' ] || [ "${use_dir}" != 'menu' ] || [ -z "${menu_value}" ]; then
     while [ ! -d "${use_dir}" ]; do
       if [ ${i} -eq 5 ]; then
         echo -e "\e[91mPlease specify the correct git directory.\e[0m"
@@ -1421,6 +1421,20 @@ function func_dir {
       use_dir="${original_git_dir}"
     else
       history_file="${PWD}/.mtsgit_history"
+
+      # check for use_dir in directories
+      exists=0
+      for dir in ${directories[@]}; do
+        if [ "${dir}" = "${use_dir}" ]; then
+          exists=1
+          break
+        fi
+      done
+
+      # append this directory to directories if it does not exist
+      if [ "${exists}" -eq 0 ]; then
+        directories+=("${use_dir}")
+      fi
     fi
   fi
 }
@@ -1709,9 +1723,18 @@ function menu_commit {
 #   None
 #######################################
 function menu_directory {
-  # clear the menu_file since the command will append to it
-  rm ${menu_file} && touch ${menu_file}
-  menu_display "for dir in \"${directories[@]}\"; do if [ -d \"${dir}\" ]; then echo \"${dir}\" >> ${menu_file}; fi done; echo Other >> ${menu_file}" 'directory number' 5 'menu_adjust_directory'
+  if [ -f "${menu_file}" ]; then
+    # clear the menu_file since the command will append to it
+    rm ${menu_file}
+  fi
+  touch ${menu_file}
+  for dir in "${directories[@]}"; do
+    if [ -d "${dir}" ]; then
+      echo "${dir}" >> ${menu_file}
+    fi
+  done
+  echo Other >> ${menu_file}
+  menu_display "touch ${menu_file}" 'directory number' 5 'menu_adjust_directory'
 }
 
 #######################################
@@ -1732,7 +1755,9 @@ function menu_directory {
 #   Int
 #######################################
 function menu_display () {
-  cd ${use_dir}
+  if [ -d "${use_dir}" ]; then
+    cd ${use_dir}
+  fi
 
   local command
   local menu_prompt
@@ -1754,6 +1779,7 @@ function menu_display () {
 
   if [ -z "${2}" ]; then
     echo -e "\e[91mmenu_display was called without a prompt parameter\e[0m"
+    echo "${1}"
     return 2
   else
     menu_prompt="${2}"
@@ -2123,7 +2149,7 @@ function set_git_dir {
       # change to directory
       cd ${dir}
       # check for inside git directory
-      git rev-parse --is-inside-work-tree
+      git rev-parse --is-inside-work-tree > /dev/null 2>&1
       rc=$?
 
       # if return code is 0, use this directory and break
@@ -2153,12 +2179,10 @@ function set_git_dir {
     func_dir
     if [ "${in_git}" != 'true' ]; then
       echo -e "\e[91mCurrent git directory [${use_dir}] is not a valid working tree\e[0m"
-      sleep 5
+      sleep 2
       exit 2
     fi
   fi
-
-  display_prompt
 }
 
 #######################################
@@ -2218,7 +2242,7 @@ prefix=''
 prompt='MTSgit'
 pull_result=99
 stamp=''
-version='1.45.04'
+version='1.45.08'
 
 set_git_dir
 
