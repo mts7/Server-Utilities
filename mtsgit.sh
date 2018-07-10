@@ -9,10 +9,11 @@ fi
 
 # Variables BEGIN
 # User Variables
-git_dir=${git_dir:-'/var/www/html'}
+use_dir=${git_dir:-'/var/www/html'}
 default_truth='master'
 default_prod_server='production'
 default_remote='origin'
+directories=("${git_dir}" "${gitDir}" "${PWD}")
 # Variables END
 
 #######################################
@@ -33,10 +34,10 @@ function display_prompt {
   local choice
 
   echo
-  read -p $'\e[95m'"$prompt"$'\e[36m'" $current_branch"$'\e[95m'"> "$'\e[0m' choice
+  read -p $'\e[95m'"${prompt}"$'\e[36m'" ${current_branch}"$'\e[95m'"> "$'\e[0m' choice
   datetimestamp
-  echo -e "\e[35m$stamp\e[0m $choice\e[0m" >> ${history_file}
-  case "$choice" in
+  echo -e "\e[35m${stamp}\e[0m ${choice}\e[0m" >> ${history_file}
+  case "${choice}" in
     dir) script_dir;;
     help) show_commands;;
     history) script_history;;
@@ -72,7 +73,7 @@ function display_prompt {
     undo) git_undo;;
     untrack) git_untrack;;
     var) func_var;;
-    *) echo -e "\e[91mUnknown command $choice\e[0m";show_commands;;
+    *) echo -e "\e[91mUnknown command ${choice}\e[0m";show_commands;;
   esac
 }
 
@@ -132,7 +133,7 @@ function show_commands {
 #######################################
 # Add files to git
 # Globals:
-#   git_dir
+#   use_dir
 #   stamp
 #   history_file
 # Arguments:
@@ -141,7 +142,7 @@ function show_commands {
 #   None
 #######################################
 function git_add {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local files
   local i
@@ -149,9 +150,9 @@ function git_add {
   local rc
   
   read -e -p 'file name: ' files
-  if [ -n "$files" ]; then
+  if [ -n "${files}" ]; then
     datetimestamp
-    echo -e "\e[35m$stamp   \e[33m$files\e[0m" >> ${history_file}
+    echo -e "\e[35m${stamp}   \e[33m${files}\e[0m" >> ${history_file}
   fi
 
   i="0"
@@ -168,9 +169,9 @@ function git_add {
       log_git "${cmd}"
     fi
     read -e -p $'\e[91mPlease specify a file name: \e[0m' files
-    if [ -n "$files" ]; then
+    if [ -n "${files}" ]; then
       datetimestamp
-      echo -e "\e[35m$stamp   \e[33m$files\e[0m" >> ${history_file}
+      echo -e "\e[35m${stamp}   \e[33m${files}\e[0m" >> ${history_file}
     fi
   done
 
@@ -183,7 +184,7 @@ function git_add {
     log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc] with add\e[0m"
+      echo -e "\e[91mError [${rc}] with add\e[0m"
     fi
   fi
 
@@ -194,7 +195,7 @@ function git_add {
 # Display changes between truth and
 #   branch or commit
 # Globals:
-#   git_dir
+#   use_dir
 #   default_branch
 #   stamp
 #   history_file
@@ -206,7 +207,7 @@ function git_add {
 #   None
 #######################################
 function git_changes {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local changed
   local truth
@@ -215,12 +216,12 @@ function git_changes {
 
   read -p "branch or commit name [${default_branch}]: " changed
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$changed\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${changed}\e[0m" >> ${history_file}
   changed=${changed:-$default_branch}
 
-  if [ "$changed" = "menu" ]; then
+  if [ "${changed}" = "menu" ]; then
     menu_branch
-    changed="$menu_value"
+    changed="${menu_value}"
 
     # use the found branch or the default branch (if no branch was found)
     changed=${changed:-$default_branch}
@@ -228,7 +229,7 @@ function git_changes {
 
   read -p "source of truth name [${default_truth}]: " truth
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$truth\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${truth}\e[0m" >> ${history_file}
   truth=${truth:-$default_truth}
 
   cmd="git diff --name-only ${changed} ${truth}"
@@ -237,7 +238,7 @@ function git_changes {
   log_git "${cmd}"
 
   if [ ${rc} -gt 0 ]; then
-    echo -e "\e[91mError [$rc] with diff\e[0m"
+    echo -e "\e[91mError [${rc}] with diff\e[0m"
   fi
 
   display_prompt
@@ -246,7 +247,7 @@ function git_changes {
 #######################################
 # Commit files to git
 # Globals:
-#   git_dir
+#   use_dir
 #   stamp
 #   history_file
 # Arguments:
@@ -255,7 +256,7 @@ function git_changes {
 #   None
 #######################################
 function git_commit {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local message
   local i
@@ -263,9 +264,9 @@ function git_commit {
   local rc
 
   read -p "message: " message
-  if [ -n "$message" ]; then
+  if [ -n "${message}" ]; then
     datetimestamp
-    echo -e "\e[35m$stamp   \e[33m$message\e[0m" >> ${history_file}
+    echo -e "\e[35m${stamp}   \e[33m${message}\e[0m" >> ${history_file}
   fi
 
   i="0"
@@ -276,22 +277,22 @@ function git_commit {
     fi
     i=$[$i+1]
     read -p $'\e[91mPlease specify a commit message: \e[0m' message
-    if [ -n "$message" ]; then
+    if [ -n "${message}" ]; then
       datetimestamp
-      echo -e "\e[35m$stamp   \e[33m$message\e[0m" >> ${history_file}
+      echo -e "\e[35m${stamp}   \e[33m${message}\e[0m" >> ${history_file}
     fi
   done
 
   if [ -z "${message}" ]; then
     echo -e "\e[91mPlease commit with a message\e[0m"
   else
-    cmd="git commit -a -m \"$message\""
+    cmd="git commit -a -m \"${message}\""
     eval ${cmd}
     rc=$?
     log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc] with commit\e[0m"
+      echo -e "\e[91mError [${rc}] with commit\e[0m"
     fi
   fi
 
@@ -301,7 +302,7 @@ function git_commit {
 #######################################
 # Create a new branch
 # Globals:
-#   git_dir
+#   use_dir
 #   default_branch
 #   stamp
 #   history_file
@@ -313,7 +314,7 @@ function git_commit {
 #   None
 #######################################
 function git_create {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local remote
   local branch
@@ -322,17 +323,17 @@ function git_create {
 
   read -p 'from remote? [y|n] ' remote
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m${remote}\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${remote}\e[0m" >> ${history_file}
 
   read -p "new branch name [${default_branch}]: " branch
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${branch}\e[0m" >> ${history_file}
   branch=${branch:-$default_branch}
 
   func_switch ${default_truth}
   rc=${pull_result}
   if [ ${rc} -gt 0 ]; then
-    echo -e "\e[91mError [$rc] with checking out $default_truth\e[0m"
+    echo -e "\e[91mError [${rc}] with checking out ${default_truth}\e[0m"
   else
     if [ "y" = "${remote}" ]; then
       cmd="git checkout --track ${default_remote}/${branch}"
@@ -344,9 +345,9 @@ function git_create {
     log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc]; failed to create branch\e[0m"
+      echo -e "\e[91mError [${rc}]; failed to create branch\e[0m"
     else
-      echo -e "\e[92mCreated $branch\e[0m"
+      echo -e "\e[92mCreated ${branch}\e[0m"
     fi
   fi
 
@@ -356,17 +357,17 @@ function git_create {
 #######################################
 # Set and display the current branch
 # Globals:
-#   git_dir
+#   use_dir
 # Arguments:
 #   None
 # Returns:
 #   None
 #######################################
 function git_current {
-  cd ${git_dir}
+  cd ${use_dir}
 
   set_current
-  echo -e "\e[36m$current_branch\e[0m"
+  echo -e "\e[36m${current_branch}\e[0m"
 
   display_prompt
 }
@@ -374,7 +375,7 @@ function git_current {
 #######################################
 # Delete a branch
 # Globals:
-#   git_dir
+#   use_dir
 #   default_truth
 #   stamp
 #   history_file
@@ -385,7 +386,7 @@ function git_current {
 #   None
 #######################################
 function git_delete {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local branch
   local to_delete
@@ -399,28 +400,28 @@ function git_delete {
 
   read -p "branch name [${default_branch}]: " branch
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${branch}\e[0m" >> ${history_file}
   branch=${branch:-$default_branch}
 
-  if [ "$branch" = "menu" ]; then
+  if [ "${branch}" = "menu" ]; then
     menu_branch
-    branch="$menu_value"
+    branch="${menu_value}"
 
     # use the found branch or the default branch (if no branch was found)
     branch=${branch:-$default_branch}
   fi
 
   to_delete=1
-  if [ "$branch" = ${default_truth} ]; then
+  if [ "${branch}" = ${default_truth} ]; then
     echo -e "\e[101mDeleting the default truth branch is not recommended."
     read -p "Are you sure you want to delete the source of truth? [y/n]: " answer
-    if [ "$answer" = "y" ]; then
+    if [ "${answer}" = "y" ]; then
       to_delete=1
-    elif [ "$answer" = "n" ]; then
+    elif [ "${answer}" = "n" ]; then
       to_delete=0
     else
       to_delete=0
-      echo -e "\e[91mUnknown answer $answer\e[0m"
+      echo -e "\e[91mUnknown answer ${answer}\e[0m"
     fi
   fi
 
@@ -431,10 +432,10 @@ function git_delete {
     log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc]; could not delete branch $branch\e[0m"
+      echo -e "\e[91mError [${rc}]; could not delete branch ${branch}\e[0m"
     fi
   else
-    echo -e "\e[93mSkipping deletion of $branch\e[0m"
+    echo -e "\e[93mSkipping deletion of ${branch}\e[0m"
   fi
 
   display_prompt
@@ -444,7 +445,7 @@ function git_delete {
 # Deploy code to default remote and
 #   default production remote
 # Globals:
-#   git_dir
+#   use_dir
 #   stamp
 #   history_file
 #   default_branch
@@ -460,7 +461,7 @@ function git_delete {
 #   None
 #######################################
 function git_deploy {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local branch_code
   local branch_server
@@ -472,21 +473,21 @@ function git_deploy {
 
   read -p "code branch name [${default_branch}]: " branch_code
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$branch_code\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${branch_code}\e[0m" >> ${history_file}
   branch_code=${branch_code:-$default_branch}
 
-  if [ "$branch_code" = "menu" ]; then
+  if [ "${branch_code}" = "menu" ]; then
     menu_branch
-    branch_code="$menu_value"
+    branch_code="${menu_value}"
 
     # use the found branch or the default branch (if no branch was found)
     branch_code=${branch_code:-$default_branch}
   fi
 
   read -p "server branch name: " branch_server
-  if [ -n "$branch_server" ]; then
+  if [ -n "${branch_server}" ]; then
     datetimestamp
-    echo -e "\e[35m$stamp   \e[33m$branch_server\e[0m" >> ${history_file}
+    echo -e "\e[35m${stamp}   \e[33m${branch_server}\e[0m" >> ${history_file}
   fi
 
   i="0"
@@ -504,9 +505,9 @@ function git_deploy {
       log_git "${command}"
     fi
     read -p $'\e[91mPlease specify a server branch name: \e[0m' branch_server
-    if [ -n "$branch_server" ]; then
+    if [ -n "${branch_server}" ]; then
       datetimestamp
-      echo -e "\e[35m$stamp   \e[33m$branch_server\e[0m" >> ${history_file}
+      echo -e "\e[35m${stamp}   \e[33m${branch_server}\e[0m" >> ${history_file}
     fi
   done
 
@@ -517,31 +518,31 @@ function git_deploy {
     read -p "deployment server branch name [${default_deploy}]: " deploy_server
     deploy_server=${deploy_server:-$default_deploy}
 
-    script_comment "Switching to $branch_server"
+    script_comment "Switching to ${branch_server}"
     cmd="git checkout ${branch_server}"
     eval ${cmd}
     log_git "${cmd}"
-    script_comment "Merging $branch_code to $branch_server"
+    script_comment "Merging ${branch_code} to ${branch_server}"
     cmd="git merge ${branch_code}"
     eval ${cmd}
     log_git "${cmd}"
-    script_comment "Pushing ${default_truth} to $branch_server"
+    script_comment "Pushing ${default_truth} to ${branch_server}"
     cmd="git push ${default_remote} ${default_truth}:${default_truth}"
     eval ${cmd}
     log_git "${cmd}"
-    script_comment "Switching to $deploy_server"
+    script_comment "Switching to ${deploy_server}"
     cmd="git checkout ${deploy_server}"
     eval ${cmd}
     log_git "${cmd}"
-    script_comment "Merging $branch_code to $deploy_server"
+    script_comment "Merging ${branch_code} to ${deploy_server}"
     cmd="git merge ${branch_code}"
     eval ${cmd}
     log_git "${cmd}"
-    script_comment "Pushing ${default_truth} to $deploy_server"
+    script_comment "Pushing ${default_truth} to ${deploy_server}"
     cmd="git push ${default_prod_server} ${default_truth}:${default_truth}"
     eval ${cmd}
     log_git "${cmd}"
-    script_comment "Switching to $branch_server"
+    script_comment "Switching to ${branch_server}"
     cmd="git checkout ${branch_server}"
     eval ${cmd}
     log_git "${cmd}"
@@ -553,7 +554,7 @@ function git_deploy {
 #######################################
 # Set the default deployment remote
 # Globals:
-#   git_dir
+#   use_dir
 #   default_prod_server
 #   default_deploy
 #   stamp
@@ -565,7 +566,7 @@ function git_deploy {
 #   None
 #######################################
 function git_deployment {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local deploy_server
   local git_path
@@ -574,13 +575,13 @@ function git_deployment {
 
   read -p "deployment server branch name [${default_prod_server}]: " deploy_server
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$deploy_server\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${deploy_server}\e[0m" >> ${history_file}
   deploy_server=${deploy_server:-$default_deploy}
 
   read -p "git path (include ssh://user@host:port/path): " git_path
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$deploy_server\e[0m" >> ${history_file}
-  if [ -z "$git_path" ]; then
+  echo -e "\e[35m${stamp}   \e[33m${deploy_server}\e[0m" >> ${history_file}
+  if [ -z "${git_path}" ]; then
     echo -e "\e[91mError: A git path must be added\e[0m"
   else
     cmd="git remote add ${deploy_server} ${git_path}"
@@ -589,7 +590,7 @@ function git_deployment {
     log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc] adding remote branch\e[0m"
+      echo -e "\e[91mError [${rc}] adding remote branch\e[0m"
     else
       cmd="git push ${deploy_server} +${default_truth}:refs/heads/${default_truth}"
       eval ${cmd}
@@ -608,7 +609,7 @@ function git_deployment {
 #######################################
 # Make a file executable
 # Globals:
-#   git_dir
+#   use_dir
 #   stamp
 #   history_file
 # Arguments:
@@ -617,16 +618,16 @@ function git_deployment {
 #   None
 #######################################
 function git_exec {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local file
   local cmd
 
   read -e -p 'file to make executable: ' file
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$file\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${file}\e[0m" >> ${history_file}
 
-  if [ -e "$file" ]; then
+  if [ -e "${file}" ]; then
     cmd="git update-index --chmod=+x ${file}"
     eval ${cmd}
     log_git "${cmd}"
@@ -640,7 +641,7 @@ function git_exec {
 #######################################
 # List local or remote branches
 # Globals:
-#   git_dir
+#   use_dir
 #   stamp
 #   history_file
 #   default_truth
@@ -650,7 +651,7 @@ function git_exec {
 #   None
 #######################################
 function git_list {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local remote
   local command
@@ -660,16 +661,16 @@ function git_list {
 
   read -p 'remote [y/n]: ' remote
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$remote\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${remote}\e[0m" >> ${history_file}
 
   command='git branch'
 
   read -p "filter: " filter
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$filter\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${filter}\e[0m" >> ${history_file}
 
-  if [ "$remote" = "y" ]; then
-    command="$command -r"
+  if [ "${remote}" = "y" ]; then
+    command="${command} -r"
 
     # check for new branches that were pushed since the last pull
     echo -e "\e[36mChecking for remote branches...\e[0m"
@@ -680,13 +681,13 @@ function git_list {
     log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc] checking out $default_truth\e[0m"
+      echo -e "\e[91mError [${rc}] checking out ${default_truth}\e[0m"
     else
       func_pull
     fi
     echo
     echo -e "\e[33mRemote Branches\e[0m"
-  elif [ "$remote" != "n" ]; then
+  elif [ "${remote}" != "n" ]; then
     echo -e "\e[91mInvalid response\e[0m"
   else
     echo
@@ -694,15 +695,15 @@ function git_list {
   fi
 
   if [ ! -z "${filter}" ]; then
-    command="$command | grep $filter"
+    command="${command} | grep ${filter}"
   fi
 
   eval ${command}
   rc=$?
-  log_git "{$command}"
+  log_git "{${command}}"
 
   if [ ${rc} -gt 0 ]; then
-    echo -e "\e[91mError [$rc]; could not list branches\e[0m"
+    echo -e "\e[91mError [${rc}]; could not list branches\e[0m"
   fi
 
   display_prompt
@@ -712,7 +713,7 @@ function git_list {
 # Show log for branch with author,
 #   file, and days ago options
 # Globals:
-#   git_dir
+#   use_dir
 #   default_branch
 #   stamp
 #   history_file
@@ -723,7 +724,7 @@ function git_list {
 #   None
 #######################################
 function git_log {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local branch
   local author
@@ -737,12 +738,12 @@ function git_log {
 
   read -p "branch name [${default_branch}]: " branch
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${branch}\e[0m" >> ${history_file}
   branch=${branch:-$default_branch}
 
-  if [ "$branch" = "menu" ]; then
+  if [ "${branch}" = "menu" ]; then
     menu_branch
-    branch="$menu_value"
+    branch="${menu_value}"
 
     # use the found branch or the default branch (if no branch was found)
     branch=${branch:-$default_branch}
@@ -750,24 +751,24 @@ function git_log {
 
   read -p "author (blank for all): " author
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$author\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${author}\e[0m" >> ${history_file}
 
   read -e -p "file relative to repo root (blank for all): " file
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$file\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${file}\e[0m" >> ${history_file}
 
   default_days=7
   read -p "days ago [${default_days}]: " days
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$days\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${days}\e[0m" >> ${history_file}
 
-  if [ "$days" -eq "$days" ] > /dev/null 2>&1
+  if [ "${days}" -eq "${days}" ] > /dev/null 2>&1
   then
     days=${days}
   else
     days=${default_days}
   fi
-  days_ago=$(date --date="$days days ago" +"%Y"-"%m"-"%d")
+  days_ago=$(date --date="${days} days ago" +"%Y"-"%m"-"%d")
 
   cmd="git checkout ${branch}"
   eval ${cmd}
@@ -775,19 +776,19 @@ function git_log {
   log_git "${cmd}"
 
   if [ ${rc} -gt 0 ]; then
-    echo -e "\e[91mError [$rc]; could not checkout $branch\e[0m"
+    echo -e "\e[91mError [${rc}]; could not checkout ${branch}\e[0m"
   else
     file_cmd=''
-    if [ -n "$file" ]; then
-      file_cmd=" --follow -p $file"
+    if [ -n "${file}" ]; then
+      file_cmd=" --follow -p ${file}"
     fi
-    cmd="git log --stat --graph --author=${author} --since=\"$days_ago\" ${file_cmd}"
+    cmd="git log --stat --graph --author=${author} --since=\"${days_ago}\" ${file_cmd}"
     eval ${cmd}
     rc=$?
     log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc]; could not get log\e[0m"
+      echo -e "\e[91mError [${rc}]; could not get log\e[0m"
     fi
   fi
 
@@ -797,7 +798,7 @@ function git_log {
 #######################################
 # Merge two branches
 # Globals:
-#   git_dir
+#   use_dir
 #   default_branch
 #   stamp
 #   history_file
@@ -809,7 +810,7 @@ function git_log {
 #   None
 #######################################
 function git_merge {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local branch_code
   local branch_server
@@ -818,21 +819,21 @@ function git_merge {
 
   read -p "code branch name [${default_branch}]: " branch_code
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$branch_code\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${branch_code}\e[0m" >> ${history_file}
   branch_code=${branch_code:-$default_branch}
 
-  if [ "$branch_code" = "menu" ]; then
+  if [ "${branch_code}" = "menu" ]; then
     menu_branch
-    branch_code="$menu_value"
+    branch_code="${menu_value}"
 
     # use the found branch or the default branch (if no branch was found)
-    branch_code=${branch_code:-$default_branch}
+    branch_code=${branch_code:-${default_branch}}
   fi
 
   read -p "server branch name: " branch_server
-  if [ -n "$branch_server" ]; then
+  if [ -n "${branch_server}" ]; then
     datetimestamp
-    echo -e "\e[35m$stamp   \e[33m$branch_server\e[0m" >> ${history_file}
+    echo -e "\e[35m${stamp}   \e[33m${branch_server}\e[0m" >> ${history_file}
   fi
 
   i="0"
@@ -842,7 +843,7 @@ function git_merge {
       break
     fi
     i=$[$i+1]
-    if [ ${i} -eq 1 ] && [ ! -z "$prefix" ]; then
+    if [ ${i} -eq 1 ] && [ ! -z "${prefix}" ]; then
       echo -e "\e[93mDid you mean one of these branches?\e[0m"
       # suggest a branch name
       command="git branch -r | egrep '${prefix}-[A-Z]+[0-9]*\b$'"
@@ -850,9 +851,9 @@ function git_merge {
       log_git "${command}"
     fi
     read -p $'\e[91mPlease specify a server branch name: \e[0m' branch_server
-    if [ -n "$branch_server" ]; then
+    if [ -n "${branch_server}" ]; then
       datetimestamp
-      echo -e "\e[35m$stamp   \e[33m$branch_server\e[0m" >> ${history_file}
+      echo -e "\e[35m${stamp}   \e[33m${branch_server}\e[0m" >> ${history_file}
     fi
   done
 
@@ -869,7 +870,7 @@ function git_merge {
 # Update the message for the latest
 #   commit
 # Globals:
-#   git_dir
+#   use_dir
 #   stamp
 #   history_file
 # Arguments:
@@ -878,7 +879,7 @@ function git_merge {
 #   None
 #######################################
 function git_message {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local message
   local cmd
@@ -886,10 +887,10 @@ function git_message {
 
   read -p 'new commit message: ' message
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$message\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${message}\e[0m" >> ${history_file}
 
-  if [ -n "$message" ]; then
-    cmd="git commit --amend -m \"$message\""
+  if [ -n "${message}" ]; then
+    cmd="git commit --amend -m \"${message}\""
     eval ${cmd}
     rc=$?
     log_git "${cmd}"
@@ -920,7 +921,7 @@ function git_pull {
 #######################################
 # Push to git and display the prompt
 # Globals:
-#   git_dir
+#   use_dir
 #   default_remote
 #   stamp
 #   history_file
@@ -930,15 +931,15 @@ function git_pull {
 #   None
 #######################################
 function git_push {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local default_server
   local server
 
   default_server=${default_remote}
-  read -p "server [$default_server]: " server
+  read -p "server [${default_server}]: " server
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$server\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${server}\e[0m" >> ${history_file}
   server=${server:-$default_server}
 
   func_push ${server}
@@ -949,7 +950,7 @@ function git_push {
 #######################################
 # Push a branch to a remote
 # Globals:
-#   git_dir
+#   use_dir
 #   default_remote
 #   default_branch
 #   stamp
@@ -961,7 +962,7 @@ function git_push {
 #   None
 #######################################
 function git_remote {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local default_server
   local server
@@ -970,17 +971,17 @@ function git_remote {
   local rc
 
   default_server=${default_remote}
-  read -p "server [$default_server]: " server
+  read -p "server [${default_server}]: " server
   server=${server:-$default_server}
 
   read -p "branch name [${default_branch}]: " branch
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${branch}\e[0m" >> ${history_file}
   branch=${branch:-$default_branch}
 
-  if [ "$branch" = "menu" ]; then
+  if [ "${branch}" = "menu" ]; then
     menu_branch
-    branch="$menu_value"
+    branch="${menu_value}"
 
     # use the found branch or the default branch (if no branch was found)
     branch=${branch:-$default_branch}
@@ -995,7 +996,7 @@ function git_remote {
     log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc] making branch $branch remote\e[0m"
+      echo -e "\e[91mError [${rc}] making branch ${branch} remote\e[0m"
     fi
   fi
 
@@ -1005,7 +1006,7 @@ function git_remote {
 #######################################
 # Hard reset a branch to a commit
 # Globals:
-#   git_dir
+#   use_dir
 #   default_branch
 #   stamp
 #   history_file
@@ -1016,7 +1017,7 @@ function git_remote {
 #   None
 #######################################
 function git_reset {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local branch
   local cmd
@@ -1026,52 +1027,52 @@ function git_reset {
 
   read -p "branch name [${default_branch}]: " branch
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${branch}\e[0m" >> ${history_file}
   branch=${branch:-$default_branch}
 
-  if [ "$branch" = "menu" ]; then
+  if [ "${branch}" = "menu" ]; then
     menu_branch
-    branch="$menu_value"
+    branch="${menu_value}"
 
     # use the found branch or the default branch (if no branch was found)
     branch=${branch:-$default_branch}
   fi
 
-  if [ "$branch" != "$current_branch" ]; then
+  if [ "${branch}" != "${current_branch}" ]; then
     cmd="git checkout ${branch}"
     eval ${cmd}
     rc=$?
     log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc] checking out $branch\e[0m"
-      echo "using $current_branch instead of $branch"
-      branch="$current_branch"
+      echo -e "\e[91mError [${rc}] checking out ${branch}\e[0m"
+      echo "using ${current_branch} instead of ${branch}"
+      branch="${current_branch}"
     fi
     script_set_current
   fi
 
   read -p 'commit name: ' commit
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$commit\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${commit}\e[0m" >> ${history_file}
 
-  if [ "$commit" = "menu" ]; then
+  if [ "${commit}" = "menu" ]; then
     menu_commit
-    commit="$menu_value"
+    commit="${menu_value}"
   fi
 
-  read -p "Are you sure you want to reset $branch? [y/n] " answer
+  read -p "Are you sure you want to reset ${branch}? [y/n] " answer
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$answer\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${answer}\e[0m" >> ${history_file}
 
-  if [ "$answer" = 'y' ]; then
+  if [ "${answer}" = 'y' ]; then
     cmd="git reset --hard ${commit}"
     eval ${cmd}
     rc=$?
     log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc] with reset\e[0m"
+      echo -e "\e[91mError [${rc}] with reset\e[0m"
     else
       echo -e "\e[92mReset the branch\e[0m"
     fi
@@ -1083,14 +1084,14 @@ function git_reset {
 #######################################
 # Pop from the stash
 # Globals:
-#   git_dir
+#   use_dir
 # Arguments:
 #   None
 # Returns:
 #   None
 #######################################
 function git_restore {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local cmd
   local rc
@@ -1101,7 +1102,7 @@ function git_restore {
   log_git "${cmd}"
 
   if [ ${rc} -gt 0 ]; then
-    echo -e "\e[91mError [$rc] popping from the stash\e[0m"
+    echo -e "\e[91mError [${rc}] popping from the stash\e[0m"
   fi
 
   display_prompt
@@ -1110,7 +1111,7 @@ function git_restore {
 #######################################
 # Revert a commit
 # Globals:
-#   git_dir
+#   use_dir
 #   stamp
 #   history_file
 #   menu_value
@@ -1120,7 +1121,7 @@ function git_restore {
 #   None
 #######################################
 function git_revert {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local commit
   local cmd
@@ -1128,14 +1129,14 @@ function git_revert {
 
   read -p 'commit to revert: ' commit
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$commit\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${commit}\e[0m" >> ${history_file}
 
-  if [ "$commit" = "menu" ]; then
+  if [ "${commit}" = "menu" ]; then
     menu_commit
-    commit="$menu_value"
+    commit="${menu_value}"
   fi
 
-  if [ -z "$commit" ]; then
+  if [ -z "${commit}" ]; then
     echo -e "\e[91mA commit number must be provided\e[0m"
   else
     cmd="git revert ${commit}"
@@ -1144,7 +1145,7 @@ function git_revert {
     log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc] reverting commit $commit\e[0m"
+      echo -e "\e[91mError [${rc}] reverting commit ${commit}\e[0m"
     else
       func_push
     fi
@@ -1156,14 +1157,14 @@ function git_revert {
 #######################################
 # Stash the current working files
 # Globals:
-#   git_dir
+#   use_dir
 # Arguments:
 #   None
 # Returns:
 #   None
 #######################################
 function git_save {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local cmd
   local rc
@@ -1174,7 +1175,7 @@ function git_save {
   log_git "${cmd}"
 
   if [ ${rc} -gt 0 ]; then
-    echo -e "\e[91mError [$rc] saving to the stash\e[0m"
+    echo -e "\e[91mError [${rc}] saving to the stash\e[0m"
   fi
 
   display_prompt
@@ -1183,7 +1184,7 @@ function git_save {
 #######################################
 # Set the default remote
 # Globals:
-#   git_dir
+#   use_dir
 #   default_remote
 #   stamp
 #   history_file
@@ -1193,13 +1194,13 @@ function git_save {
 #   None
 #######################################
 function git_server {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local remote
 
   read -p "remote name [${default_remote}]: " remote
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$remote\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${remote}\e[0m" >> ${history_file}
   default_remote=${remote:-$default_remote}
   echo -e "\e[92mchanged default remote to ${default_remote}\e[0m"
 
@@ -1209,14 +1210,14 @@ function git_server {
 #######################################
 # Display current remotes
 # Globals:
-#   git_dir
+#   use_dir
 # Arguments:
 #   None
 # Returns:
 #   None
 #######################################
 function git_servers {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local cmd
 
@@ -1230,14 +1231,14 @@ function git_servers {
 #######################################
 # Display current status
 # Globals:
-#   git_dir
+#   use_dir
 # Arguments:
 #   None
 # Returns:
 #   None
 #######################################
 function git_status {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local cmd
 
@@ -1251,7 +1252,7 @@ function git_status {
 #######################################
 # Switch to a different branch
 # Globals:
-#   git_dir
+#   use_dir
 #   default_branch
 #   stamp
 #   history_file
@@ -1262,18 +1263,18 @@ function git_status {
 #   None
 #######################################
 function git_switch {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local branch
 
   read -p "branch name [${default_branch}]: " branch
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${branch}\e[0m" >> ${history_file}
   branch=${branch:-$default_branch}
 
-  if [ "$branch" = "menu" ]; then
+  if [ "${branch}" = "menu" ]; then
     menu_branch
-    branch="$menu_value"
+    branch="${menu_value}"
 
     # use the found branch or the default branch (if no branch was found)
     branch=${branch:-$default_branch}
@@ -1288,7 +1289,7 @@ function git_switch {
 # Switch tracking of local branch to
 #   different remote branch
 # Globals:
-#   git_dir
+#   use_dir
 #   default_branch
 #   menu_value
 # Arguments:
@@ -1297,25 +1298,25 @@ function git_switch {
 #   None
 #######################################
 function git_track {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local server
   local branch
   local cmd
 
-  read -p "remote [$default_remote]: " server
+  read -p "remote [${default_remote}]: " server
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$server\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${server}\e[0m" >> ${history_file}
   server=${server:-$default_remote}
 
   read -p "branch name [${default_branch}]: " branch
   datetimestamp
-  echo -e "\e[35m$stamp   \e[33m$branch\e[0m" >> ${history_file}
+  echo -e "\e[35m${stamp}   \e[33m${branch}\e[0m" >> ${history_file}
   branch=${branch:-$default_branch}
 
-  if [ "$branch" = "menu" ]; then
+  if [ "${branch}" = "menu" ]; then
     menu_branch
-    branch="$menu_value"
+    branch="${menu_value}"
 
     # use the found branch or the default branch (if no branch was found)
     branch=${branch:-$default_branch}
@@ -1333,14 +1334,14 @@ function git_track {
 #######################################
 # Soft reset the branch
 # Globals:
-#   git_dir
+#   use_dir
 # Arguments:
 #   None
 # Returns:
 #   None
 #######################################
 function git_undo {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local cmd
   local rc
@@ -1351,7 +1352,7 @@ function git_undo {
   log_git "${cmd}"
 
   if [ ${rc} -gt 0 ]; then
-    echo -e "\e[91mError [$rc] with reset\e[0m"
+    echo -e "\e[91mError [${rc}] with reset\e[0m"
   else
     echo -e "\e[92mRemoved the commit\e[0m"
   fi
@@ -1362,18 +1363,16 @@ function git_undo {
 #######################################
 # Remove remote tracking of a branch
 # Globals:
-#   git_dir
+#   use_dir
 # Arguments:
 #   None
 # Returns:
 #   None
 #######################################
 function git_untrack {
-  cd ${git_dir}
+  cd ${use_dir}
 
-  local cmd
-
-  cmd='git branch --unset-upstream'
+  local cmd='git branch --unset-upstream'
   eval ${cmd}
   log_git "${cmd}"
 
@@ -1381,9 +1380,55 @@ function git_untrack {
 }
 
 #######################################
+# Prompt for git directory
+# Globals:
+#   use_dir
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+function func_dir {
+  local i="0"
+
+  read -e -p "Please specify the git directory[${use_dir}]: " use_dir
+
+  if [ "${use_dir}" -eq 'menu' ]; then
+    menu_directory
+  fi
+
+  if [ "${menu_value}" -eq 'Other' ] || [ "${use_dir}" -ne 'menu' ]; then
+    while [ ! -d "${use_dir}" ]; do
+      if [ ${i} -eq 5 ]; then
+        echo -e "\e[91mPlease specify the correct git directory.\e[0m"
+        break
+      fi
+      i=$[$i+1]
+
+      read -e -p 'Please specify the git directory: ' use_dir
+    done
+  else
+    use_dir="${menu_value}"
+  fi
+
+  if [ -z "${use_dir}" ] || [ ! -d "${use_dir}" ]; then
+    echo -e "\e[91mNo git directory is set\e[0m"
+  else
+    # check for git directory
+    script_in_git_dir
+    if [ "${in_git}" != 'true' ]; then
+      echo -e "\e[91mCurrent git directory [${use_dir}] is not a valid working tree\e[0m"
+      use_dir="${original_git_dir}"
+    else
+      history_file="${PWD}/.mtsgit_history"
+    fi
+  fi
+}
+
+#######################################
 # Pop from the stash
 # Globals:
-#   git_dir
+#   use_dir
 #   default_remote
 # Arguments:
 #   Code branch
@@ -1397,9 +1442,9 @@ function func_merge {
   local cmd
   local rc
 
-  script_comment "func_merge($1, $2)"
-  branch_code="$1"
-  branch_server="$2"
+  script_comment "func_merge(${1}, ${2})"
+  branch_code="${1}"
+  branch_server="${2}"
 
   func_switch ${default_truth}
   rc=$?
@@ -1417,7 +1462,7 @@ function func_merge {
       log_git "${cmd}"
 
       if [ ${rc} -gt 0 ]; then
-        echo -e "\e[91mError [$rc]; aborting branch merge\e[0m"
+        echo -e "\e[91mError [${rc}]; aborting branch merge\e[0m"
         echo -e "\e[93mPlease fix the conflicts and then push\e[0m"
       else
         if [ "${is_remote}" -eq 1 ]; then
@@ -1431,7 +1476,7 @@ function func_merge {
 #######################################
 # Pull from remote
 # Globals:
-#   git_dir
+#   use_dir
 #   default_remote
 #   is_remote
 #   current_branch
@@ -1442,7 +1487,7 @@ function func_merge {
 #   None
 #######################################
 function func_pull {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local cmd
   local rc
@@ -1456,7 +1501,7 @@ function func_pull {
     log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc] with pull\e[0m"
+      echo -e "\e[91mError [${rc}] with pull\e[0m"
     fi
     pull_result=${rc}
   else
@@ -1479,17 +1524,17 @@ function func_push {
   local cmd
   local rc
 
-  script_comment "func_push($1)"
-  if [ -z "$1" ]; then
+  script_comment "func_push(${1})"
+  if [ -z "${1}" ]; then
     server=''
   else
-    server="$1"
+    server="${1}"
   fi
 
   func_pull
   rc=${pull_result}
   if [ ${rc} -gt 0 ]; then
-    echo -e "\e[91mError [$rc]; aborting pull\e[0m"
+    echo -e "\e[91mError [${rc}]; aborting pull\e[0m"
     echo -e "\e[93mPlease fix the issue and then push\e[0m"
   else
     cmd="git push ${server}"
@@ -1498,7 +1543,7 @@ function func_push {
     log_git "${cmd}"
 
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc]; aborting push after pull\e[0m"
+      echo -e "\e[91mError [${rc}]; aborting push after pull\e[0m"
     fi
   fi
 }
@@ -1517,8 +1562,8 @@ function func_switch {
   local cmd
   local rc
 
-  script_comment "func_switch($1)"
-  branch="$1"
+  script_comment "func_switch(${1})"
+  branch="${1}"
 
   # if the branch is empty, there is nothing to do
   if [ -z "${branch}" ]; then
@@ -1532,7 +1577,7 @@ function func_switch {
   log_git "${cmd}"
 
   if [ ${rc} -gt 0 ]; then
-    echo -e "\e[91mError [$rc] checking out $branch\e[0m"
+    echo -e "\e[91mError [${rc}] checking out ${branch}\e[0m"
   else
     func_pull
   fi
@@ -1541,7 +1586,7 @@ function func_switch {
 #######################################
 # Display a variable if it exists
 # Globals:
-#   git_dir
+#   use_dir
 # Arguments:
 #   None
 # Returns:
@@ -1569,13 +1614,13 @@ function func_var () {
 function menu_adjust_branch () {
   local local_branch
 
-  if [ -z "$1" ]; then
+  if [ -z "${1}" ]; then
     return 1
   else
-    local_branch="$1"
+    local_branch="${1}"
 
     # trim leading spaces from the branch name
-    local_branch=`echo "$local_branch" | xargs`
+    local_branch=`echo "${local_branch}" | xargs`
   fi
 
   menu_value="${local_branch}"
@@ -1594,19 +1639,36 @@ function menu_adjust_branch () {
 function menu_adjust_commit () {
   local value
 
-  if [ -z "$1" ]; then
+  if [ -z "${1}" ]; then
     return 1
   else
-    value="$1"
+    value="${1}"
   fi
 
   menu_value="${value:0:7}"
 }
 
 #######################################
+# Set directory to chosen value
+# Globals:
+#   menu_value
+# Arguments:
+#   Directory name
+# Returns:
+#   None
+#######################################
+function menu_adjust_directory () {
+  if [ -z "${1}" ]; then
+    return 1
+  else
+    menu_value="${1}"
+  fi
+}
+
+#######################################
 # Display a menu for branches
 # Globals:
-#   git_dir
+#   use_dir
 #   prefix
 #   menu_file
 # Arguments:
@@ -1615,15 +1677,15 @@ function menu_adjust_commit () {
 #   None
 #######################################
 function menu_branch {
-  cd ${git_dir}
+  cd ${use_dir}
 
-  menu_display "git branch | egrep '${prefix}-' > $menu_file" 'branch number' 30 'menu_adjust_branch'
+  menu_display "git branch | egrep '${prefix}-' > ${menu_file}" 'branch number' 30 'menu_adjust_branch'
 }
 
 #######################################
 # Display a menu for commits
 # Globals:
-#   git_dir
+#   use_dir
 #   menu_file
 # Arguments:
 #   None
@@ -1631,16 +1693,32 @@ function menu_branch {
 #   None
 #######################################
 function menu_commit {
-  cd ${git_dir}
+  cd ${use_dir}
 
-  menu_display "git log --oneline --decorate -10 > $menu_file" 'commit number' 10 'menu_adjust_commit'
+  menu_display "git log --oneline --decorate -10 > ${menu_file}" 'commit number' 10 'menu_adjust_commit'
+}
+
+#######################################
+# Display a menu for git directories
+# Globals:
+#   directories
+#   menu_file
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+function menu_directory {
+  # clear the menu_file since the command will append to it
+  rm ${menu_file} && touch ${menu_file}
+  menu_display "for dir in \"${directories[@]}\"; do if [ -d \"${dir}\" ]; then echo \"${dir}\" >> ${menu_file}; fi done; echo Other >> ${menu_file}" 'directory number' 5 'menu_adjust_directory'
 }
 
 #######################################
 # Display a menu with a prompt for a
 #   menu item number
 # Globals:
-#   git_dir
+#   use_dir
 #   menu_temp
 #   menu_file
 #   stamp
@@ -1651,10 +1729,10 @@ function menu_commit {
 #   Item Numbers
 #   Menu Function
 # Returns:
-#   None
+#   Int
 #######################################
 function menu_display () {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local command
   local menu_prompt
@@ -1667,32 +1745,32 @@ function menu_display () {
   local rc
 
   # validate arguments
-  if [ -z "$1" ]; then
+  if [ -z "${1}" ]; then
     echo -e "\e[91mmenu_display was called without a command parameter\e[0m"
     return 1
   else
-    command="$1"
+    command="${1}"
   fi
 
-  if [ -z "$2" ]; then
+  if [ -z "${2}" ]; then
     echo -e "\e[91mmenu_display was called without a prompt parameter\e[0m"
     return 2
   else
-    menu_prompt="$2"
+    menu_prompt="${2}"
   fi
 
-  if [ -z "$3" ]; then
+  if [ -z "${3}" ]; then
     echo -e "\e[91mmenu_display was called without a number of items parameter\e[0m"
     return 3
   else
-    item_numbers="$3"
+    item_numbers="${3}"
   fi
 
-  if [ -z "$4" ]; then
-    echo -e "\e[91mmenu_display was called without a value manipulation function parameter\e[0m"
+  if [ -z "${4}" ]; then
+    echo -e "\e[91mmenu_display was called without a callback function parameter\e[0m"
     return 4
   else
-    menu_function="$4"
+    menu_function="${4}"
   fi
 
   # execute the command and write the contents to the menuFile
@@ -1708,13 +1786,13 @@ function menu_display () {
       break
     fi
     i=$[$i+1]
-    printf "%2s: %s\n" "$i" "$line"
-  done < "$menu_file"
+    printf "%2s: %s\n" "${i}" "${line}"
+  done < "${menu_file}"
 
   read -p "${menu_prompt}: " menu_item
-  if [ -n "$menu_item" ]; then
+  if [ -n "${menu_item}" ]; then
     datetimestamp
-    echo -e "\e[35m$stamp   \e[33m$menu_item\e[0m" >> ${history_file}
+    echo -e "\e[35m${stamp}   \e[33m${menu_item}\e[0m" >> ${history_file}
   fi
 
   # give the user 3 chances to enter something valid
@@ -1725,9 +1803,9 @@ function menu_display () {
     fi
     i=$[$i+1]
     read -p $'\e[91mPlease specify a number of a ${menuPrompt} menu item: \e[0m' menu_item
-    if [ -n "$menu_item" ]; then
+    if [ -n "${menu_item}" ]; then
       datetimestamp
-      echo -e "\e[35m$stamp   \e[33m$menu_item\e[0m" >> ${history_file}
+      echo -e "\e[35m${stamp}   \e[33m${menu_item}\e[0m" >> ${history_file}
     fi
   done
 
@@ -1738,18 +1816,18 @@ function menu_display () {
     value=$(sed "${menu_item}q;d" ${menu_file})
     rc=$?
     if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [$rc] with sed.\e[0m"
+      echo -e "\e[91mError [${rc}] with sed.\e[0m"
     else
       # check for current branch (denoted by "* " before the branch name)
       first=$(echo "${value}" | cut -d' ' -f 1)
-      if [ "$first" = "*" ]; then
+      if [ "${first}" = "*" ]; then
         value="${value:2}"
       fi
 
       # execute function with this value
       eval ${menu_function} "${value}"
 
-      echo "using value $menu_value"
+      echo "using value ${menu_value}"
     fi
   fi
 }
@@ -1770,7 +1848,7 @@ function script_comment {
 #######################################
 # Set the git directory
 # Globals:
-#   git_dir
+#   use_dir
 #   in_git
 #   original_git_dir
 #   history_file
@@ -1780,29 +1858,7 @@ function script_comment {
 #   None
 #######################################
 function script_dir {
-  local i
-
-  read -e -p "Please specify the git directory[${git_dir}]: " git_dir
-
-  i="0"
-  while [ ! -d "$git_dir" ]; do
-    if [ ${i} -eq 5 ]; then
-      echo -e "\e[91mPlease specify the correct git directory and try again.\e[0m"
-      break
-    fi
-    i=$[$i+1]
-
-    read -e -p 'Please specify the git directory: ' git_dir
-  done
-
-  # check for git directory
-  script_in_git_dir
-  if [ "$in_git" != 'true' ]; then
-    echo -e "\e[91mCurrent git directory [${git_dir}] is not a valid working tree\e[0m"
-    git_dir="$original_git_dir"
-  else
-    history_file="$PWD/.mtsgit_history"
-  fi
+  func_dir
 
   display_prompt
 }
@@ -1825,7 +1881,7 @@ function script_history {
 #######################################
 # Test for being in a working tree
 # Globals:
-#   git_dir
+#   use_dir
 #   in_git
 # Arguments:
 #   None
@@ -1833,7 +1889,7 @@ function script_history {
 #   None
 #######################################
 function script_in_git_dir {
-  cd ${git_dir}
+  cd ${use_dir}
 
   local rc
 
@@ -1897,7 +1953,7 @@ function script_set {
 #######################################
 function script_set_current {
   set_current
-  default_branch="$current_branch"
+  default_branch="${current_branch}"
   script_prefix
 }
 
@@ -1918,9 +1974,9 @@ function script_truth {
   local lines
 
   read -p "default source of truth branch: " truth
-  if [ -n "$truth" ]; then
+  if [ -n "${truth}" ]; then
     datetimestamp
-    echo -e "\e[35m$stamp   \e[33m$truth\e[0m" >> ${history_file}
+    echo -e "\e[35m${stamp}   \e[33m${truth}\e[0m" >> ${history_file}
   fi
 
   i="0"
@@ -1931,24 +1987,24 @@ function script_truth {
     fi
     i=$[$i+1]
     read -p $'\e[91mPlease specify the source of truth: \e[0m' truth
-    if [ -n "$truth" ]; then
+    if [ -n "${truth}" ]; then
       datetimestamp
-      echo -e "\e[35m$stamp   \e[33m$truth\e[0m" >> ${history_file}
+      echo -e "\e[35m${stamp}   \e[33m${truth}\e[0m" >> ${history_file}
     fi
   done
 
   if [ -z "${truth}" ]; then
     echo -e "\e[91mNo branch specified"
   else
-    cd ${git_dir}
+    cd ${use_dir}
 
     # check to see if the $truth branch actually exists before setting default
     lines=$(eval "git branch | egrep '^\**\s*${truth}$' | wc -l")
-    if [ "$lines" = "1" ]; then
-      default_truth="$truth"
+    if [ "${lines}" = "1" ]; then
+      default_truth="${truth}"
       echo -e "\e[92mSet default source of truth to \e[96m${default_truth}\e[0m"
     else
-      echo -e "\e[91mBranch $truth does not exist\e[0m"
+      echo -e "\e[91mBranch ${truth} does not exist\e[0m"
     fi
   fi
 
@@ -1958,7 +2014,7 @@ function script_truth {
 #######################################
 # Display variables of this script
 # Globals:
-#   git_dir
+#   use_dir
 #   prompt
 #   default_branch
 #   default_truth
@@ -1978,18 +2034,18 @@ function script_truth {
 function script_variables {
   echo -e "\e[0mCurrent Variables"
   echo
-  echo -e "git_dir: \e[33m$git_dir\e[0m"
-  echo -e "prompt: \e[95m$prompt\e[0m"
-  echo -e "default_branch: \e[32m$default_branch\e[0m"
-  echo -e "default_truth: \e[96m$default_truth\e[0m"
-  echo -e "current_branch: \e[36m$current_branch\e[0m"
-  echo -e "default_prod_server: $default_prod_server\e[0m"
-  echo -e "default_remote: $default_remote\e[0m"
+  echo -e "use_dir: \e[33m${use_dir}\e[0m"
+  echo -e "prompt: \e[95m${prompt}\e[0m"
+  echo -e "default_branch: \e[32m${default_branch}\e[0m"
+  echo -e "default_truth: \e[96m${default_truth}\e[0m"
+  echo -e "current_branch: \e[36m${current_branch}\e[0m"
+  echo -e "default_prod_server: ${default_prod_server}\e[0m"
+  echo -e "default_remote: ${default_remote}\e[0m"
   echo -e "is_local: ${is_local}\e[0m"
   echo -e "is_remote: ${is_remote}\e[0m"
-  echo -e "prefix: \e[35m$prefix\e[0m"
-  echo -e "history_file: $history_file\e[0m"
-  echo -e "version: \e[94m$version\e[0m"
+  echo -e "prefix: \e[35m${prefix}\e[0m"
+  echo -e "history_file: ${history_file}\e[0m"
+  echo -e "version: \e[94m${version}\e[0m"
 
   display_prompt
 }
@@ -2044,6 +2100,68 @@ function set_current {
 }
 
 #######################################
+# Set the git directory based on
+#   variables or current working
+#   directory and prompt for a
+#   directory if auto set does not work
+# Globals:
+#   directories
+#   use_dir
+#   in_git
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+function set_git_dir {
+  local rc
+
+  # loop through directories
+  for dir in "${directories[@]}"; do
+    # if directory is not empty and is a directory
+    if [ -n "${dir}" ] && [ -d "${dir}" ]; then
+      # change to directory
+      cd ${dir}
+      # check for inside git directory
+      git rev-parse --is-inside-work-tree
+      rc=$?
+
+      # if return code is 0, use this directory and break
+      if [ "${rc}" -eq 0 ]; then
+        use_dir="${dir}"
+        break
+      fi
+    fi
+  done
+
+  if [ -z "${use_dir}" ]; then
+    # prompt last
+    func_dir
+  fi
+
+  # check for directory existence
+  if [ ! -d "${use_dir}" ]; then
+    echo -e "\e[91mUnable to find directory ${use_dir}.\e[0m"
+    sleep 2
+    exit 1
+  fi
+
+  # check for git directory
+  script_in_git_dir
+  if [ "${in_git}" != 'true' ]; then
+    # the directory is probably a valid directory, but it does not contain a repository
+    func_dir
+    if [ "${in_git}" != 'true' ]; then
+      echo -e "\e[91mCurrent git directory [${use_dir}] is not a valid working tree\e[0m"
+      sleep 5
+      exit 2
+    fi
+  fi
+
+  display_prompt
+}
+
+#######################################
 # Set the date time stamp
 # Globals:
 #   stamp
@@ -2070,7 +2188,7 @@ function log_git() {
     echo -e "\e[91mA message must be provided to log the git command\e[0m"
   else
     datetimestamp
-    echo -e "\e[35m$stamp \e[96m${1}\e[0m" >> ${history_file}
+    echo -e "\e[35m${stamp} \e[96m${1}\e[0m" >> ${history_file}
   fi
 }
 
@@ -2095,45 +2213,25 @@ default_branch=''
 in_git=''
 is_local=0
 is_remote=0
-original_git_dir="$git_dir"
+original_git_dir="${use_dir}"
 prefix=''
 prompt='MTSgit'
 pull_result=99
 stamp=''
-version='1.45.01'
+version='1.45.04'
 
-# check for directory existence
-if [ ! -d "$git_dir" ]; then
-  script_dir
-  if [ ! -d "$git_dir" ]; then
-    echo -e "\e[91mUnable to find directory $git_dir.\e[0m"
-    sleep 3
-    exit 1
-  fi
-fi
-
-# check for git directory
-script_in_git_dir
-if [ "$in_git" != 'true' ]; then
-  # the directory is probably a valid directory, but it does not contain a repository
-  script_dir
-  if [ "$in_git" != 'true' ]; then
-    echo -e "\e[91mCurrent git directory [${git_dir}] is not a valid working tree\e[0m"
-    sleep 5
-    exit 2
-  fi
-fi
+set_git_dir
 
 # set directory for history file location
-cd ${git_dir}
+cd ${use_dir}
 cd ..
 
-history_file="$PWD/.mtsgit_history"
+history_file="${PWD}/.mtsgit_history"
 menu_temp=''
-menu_file="$PWD/mtstemp_menu"
+menu_file="${PWD}/mtstemp_menu"
 menu_value=''
 
-cd ${git_dir}
+cd ${use_dir}
 
 echo 'MTSgit: An interactive script for standard git commands'
 echo -e "Version \e[94m${version}\e[0m"
