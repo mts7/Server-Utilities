@@ -2100,7 +2100,7 @@ prefix=''
 prompt='MTSgit'
 pull_result=99
 stamp=''
-version='1.44'
+version='1.45.01'
 
 # check for directory existence
 if [ ! -d "$git_dir" ]; then
@@ -2115,9 +2115,13 @@ fi
 # check for git directory
 script_in_git_dir
 if [ "$in_git" != 'true' ]; then
-  echo -e "\e[91mCurrent git directory [${git_dir}] is not a valid working tree\e[0m"
-  sleep 5
-  exit 2
+  # the directory is probably a valid directory, but it does not contain a repository
+  script_dir
+  if [ "$in_git" != 'true' ]; then
+    echo -e "\e[91mCurrent git directory [${git_dir}] is not a valid working tree\e[0m"
+    sleep 5
+    exit 2
+  fi
 fi
 
 # set directory for history file location
