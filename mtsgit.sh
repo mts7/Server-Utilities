@@ -245,6 +245,69 @@ function git_changes {
 }
 
 #######################################
+# Clone a repository
+# Globals:
+#   use_dir
+# Arguments:
+#   Repository string (user@host:repo)
+#   Directory (optional)
+# Returns:
+#   None
+#######################################
+function git_clone () {
+  if [ -z "${1}" ]; then
+    echo -e "\e[91mPlease provide user@host:repository.git\e[0m"
+    return 1
+  fi
+
+  local rc
+  local answer
+
+  # parameter 2 is the directory to use
+  local directory=''
+  if [ -n "{$2}" ]; then
+    if [ -d "${2}" ]; then
+      echo -e "\e[91mError: directory ${2} already exists\e[0m"
+      return 2
+    fi
+    directory="${2}"
+  fi
+
+  # verify the current directory is not a git directory
+  git rev-parse --is-inside-work-tree > /dev/null 2>&1
+  rc=$?
+
+  # if return code is 0, this is a git directory
+  if [ "${rc}" -eq 0 ]; then
+    # prompt user because cloning a repository into another repository might be bad
+    read -p 'Are you sure you want to clone the repository into an existing repository? [y/N] ' answer
+    if [ "${answer}" != 'y' ]; then
+      return 4
+    fi
+  fi
+
+  # do the clone
+  git clone ${1} ${directory}
+  rc=$?
+
+  if [ "${rc}" -gt 0 ]; then
+    echo -e "\e[91mError ${rc} with git clone for ${1}\e[0m"
+    return 8
+  fi
+
+  # get directory name if it doesn't exist
+  if [ -z "${directory}" ]; then
+    # pull name from between : and .git in $1
+    directory=$(echo "${1}" | sed -E 's/.+:([a-zA-Z0-9_-]+)\.git/\1/')
+  fi
+
+  cd ${directory}
+  # add this directory to the list of directories
+  directories+=("${PWD}")
+  use_dir="${PWD}"
+}
+
+#######################################
 # Commit files to git
 # Globals:
 #   use_dir
@@ -2142,6 +2205,12 @@ function set_current {
 function set_git_dir {
   local rc
 
+  # check for valid use_dir
+  script_in_git_dir
+  if [ "${in_git}" = 'true' ]; then
+    return 0
+  fi
+
   # loop through directories
   for dir in "${directories[@]}"; do
     # if directory is not empty and is a directory
@@ -2242,7 +2311,19 @@ prefix=''
 prompt='MTSgit'
 pull_result=99
 stamp=''
-version='1.45'
+version='1.46'
+
+# check for command line arguments
+if [ -n "${1}" ]; then
+  case "${1}" in
+    clone)
+      git_clone "${2}" "${3}"
+      ;;
+    *)
+      echo -e "\e[91mUnknown command line parameter '${1}'\e[0m"
+      ;;
+  esac
+fi
 
 set_git_dir
 
