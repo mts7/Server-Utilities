@@ -2206,9 +2206,11 @@ function set_git_dir {
   local rc
 
   # check for valid use_dir
-  script_in_git_dir
-  if [ "${in_git}" = 'true' ]; then
-    return 0
+  if [ -d "${use_dir}" ]; then
+    script_in_git_dir
+    if [ "${in_git}" = 'true' ]; then
+      return 0
+    fi
   fi
 
   # loop through directories
