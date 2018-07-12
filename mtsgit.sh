@@ -2217,7 +2217,6 @@ function set_git_dir {
   for dir in "${directories[@]}"; do
     # if directory is not empty and is a directory
     if [ -n "${dir}" ] && [ -d "${dir}" ]; then
-      echo "thinking about using directory ${dir}"
       # change to directory
       cd ${dir}
       # check for inside git directory
@@ -2226,16 +2225,11 @@ function set_git_dir {
 
       # if return code is 0, use this directory and break
       if [ "${rc}" -eq 0 ]; then
-        echo "using this ${dir} directory"
         use_dir="${dir}"
         break
       fi
-      echo "decided to not use directory ${dir}"
     fi
-    echo "done with directory ${dir}"
   done
-
-  echo "current directory: ${use_dir}"
 
   if [ -z "${use_dir}" ] || [ ! -d "${use_dir}" ]; then
     # prompt last
