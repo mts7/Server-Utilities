@@ -4,8 +4,9 @@
 # example usage: ./get-ip all
 #                ./get-ip
 
-file="/home/user/ipaddr"
-ip addr > $file
+file="ipaddr"
+touch ${file}
+ip addr > ${file}
 i=0
 found=false
 ips=()
