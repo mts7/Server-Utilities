@@ -2,8 +2,9 @@
 # author: Mike Rodarte
 # accepts single command line argument of all
 # example usage: ./get-ip
+#                ./get-ip 192.168.1
 
-ifconfig | grep "inet addr" | awk -F: '{ print $2 }' | awk '{ print $1 }' 
+ifconfig | grep "inet addr" | awk -F: '{ print $2 }' | awk '{ print $1 }' | grep "${1}"
 
 # get return code from command
 rc=$?
