@@ -2,8 +2,8 @@
 # Server Stats Checker
 
 # Configuration variables
-dir="/home/user/"
-from="server@$HOSTNAME"
+dir="~"
+from="server@${HOSTNAME}"
 to="${HOSTNAME}_server@example.com"
 fs="/dev/sda1"
 # Alert Levels
@@ -11,8 +11,21 @@ cpuLevel=25
 diskLevel=50
 memLevel=60
 
+# process command line arguments
+if [ $# -gt 0 ]; then
+  while [ $# -gt 0 ]
+  do
+    case "${1}" in
+      -fs)
+        # set the file system to the nxt value
+        fs="${2}"; shift;;
+    esac
+    shift
+  done
+fi
+
 echo "==============================================================================="
-echo "Server Statistics for $HOSTNAME by Mike Rodarte"
+echo "Server Statistics for ${HOSTNAME} by Mike Rodarte"
 echo "==============================================================================="
 
 
@@ -64,7 +77,7 @@ function disk_check {
 
 function kernel_check {
     echo "kernel $(uname -r)"
-    echo $(cat /etc/system-release)
+    echo $(cat /etc/*-release)
 }
 
 
