@@ -1387,9 +1387,11 @@ function git_track {
 
   func_switch ${branch}
 
-  cmd="git branch -u ${server}/${branch}"
-  eval ${cmd}
-  log_git "${cmd}"
+  if [ ${pull_result} -eq 0 ]; then
+    cmd="git branch -u ${server}/${branch}"
+    eval ${cmd}
+    log_git "${cmd}"
+  fi
 
   display_prompt
 }
@@ -1524,14 +1526,12 @@ function func_merge {
   branch_server="${2}"
 
   func_switch ${default_truth}
-  rc=$?
-  if [ ${rc} -gt 0 ]; then
-    echo -e "\e[91mError [${rc}]; could not switch to ${default_truth}\e[0m";
+  if [ ${pull_result} -gt 0 ]; then
+    echo -e "\e[91mError [${pull_result}]; could not switch to ${default_truth}\e[0m";
   else
     func_switch ${branch_server}
-    rc=$?
-    if [ ${rc} -gt 0 ]; then
-      echo -e "\e[91mError [${rc}]; could not switch to ${branch_server}\e[0m"
+    if [ ${pull_result} -gt 0 ]; then
+      echo -e "\e[91mError [${pull_result}]; could not switch to ${branch_server}\e[0m"
     else
       cmd="git merge ${branch_code}"
       eval ${cmd}
@@ -1609,10 +1609,10 @@ function func_push {
   fi
 
   func_pull
-  rc=${pull_result}
-  if [ ${rc} -gt 0 ]; then
-    echo -e "\e[91mError [${rc}]; aborting pull\e[0m"
+  if [ ${pull_result} -gt 0 ]; then
+    echo -e "\e[91mError [${pull_result}]; aborting pull\e[0m"
     echo -e "\e[93mPlease fix the issue and then push\e[0m"
+    return ${pull_result}
   else
     cmd="git push ${server}"
     eval ${cmd}
@@ -1621,6 +1621,7 @@ function func_push {
 
     if [ ${rc} -gt 0 ]; then
       echo -e "\e[91mError [${rc}]; aborting push after pull\e[0m"
+      return ${rc}
     fi
   fi
 }
@@ -1655,6 +1656,7 @@ function func_switch {
 
   if [ ${rc} -gt 0 ]; then
     echo -e "\e[91mError [${rc}] checking out ${branch}\e[0m"
+    pull_result=${rc}
   else
     func_pull
   fi
@@ -2313,7 +2315,7 @@ prefix=''
 prompt='MTSgit'
 pull_result=99
 stamp=''
-version='1.46.1'
+version='1.47'
 
 # check for command line arguments
 if [ -n "${1}" ]; then
