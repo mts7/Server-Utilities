@@ -2315,7 +2315,7 @@ prefix=''
 prompt='MTSgit'
 pull_result=99
 stamp=''
-version='1.47'
+version='1.47.1'
 
 # check for command line arguments
 if [ -n "${1}" ]; then
