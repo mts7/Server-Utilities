@@ -3,13 +3,13 @@
 
 # Configuration variables
 dir="~"
-from="server@${HOSTNAME}"
-to="${HOSTNAME}_server@example.com"
-fs="/dev/sda1"
+from="${HOSTNAME} Server Check <server@${HOSTNAME}>"
+to="${HOSTNAME}_server@mts7.com"
+fs="/dev/root"
 # Alert Levels
-cpuLevel=25
-diskLevel=50
-memLevel=60
+cpuLevel=75
+diskLevel=80
+memLevel=80
 
 # process command line arguments
 if [ $# -gt 0 ]; then

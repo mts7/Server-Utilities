@@ -2127,6 +2127,7 @@ function script_variables {
   echo
   echo -e "use_dir: \x1B[33m${use_dir}\x1B[0m"
   echo -e "prompt: \x1B[95m${prompt}\x1B[0m"
+<<<<<<< Updated upstream
   echo -e "default_branch: \x1B[32m${default_branch}\x1B[0m"
   echo -e "default_truth: \x1B[96m${default_truth}\x1B[0m"
   echo -e "current_branch: \x1B[36m${current_branch}\x1B[0m"
