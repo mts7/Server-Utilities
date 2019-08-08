@@ -7,7 +7,7 @@
 #
 # Configure the options below
 # Add domain names to the list, separated by a space
-domains=(websitedevelopercolorado.com uk.ilj.co mtscastlerock.com contemplating.today mikerodarte.com)
+domains=(mts7.party uk.ilj.co mtscastlerock.com mikerodarte.com)
 # SSH Ports (at least one of these should be open)
 sshPorts=(22 1983)
 # Output file
